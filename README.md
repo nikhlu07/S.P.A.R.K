@@ -1,5 +1,8 @@
 # ⚡ SPARK
+
 ## **S**ocial **P**ayments **A**nd **R**ewards on **K**aia
+
+<img src="logo.png" alt="Z.E.N.I.T.H. Logo" width="120"/>
 
 ```
 █▀ █▀█ ▄▀█ █▀█ █▄▀   █▀█ █▀█ █▀█ ▀█▀ █▀█ █▀▀ █▀█ █░░
