@@ -169,7 +169,7 @@ export default function SparkHome() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-gray-100 font-sans relative">
+    <div className="min-h-screen bg-gray-900 text-gray-100 font-sans relative">
       <CyberBackground />
       <div className="relative z-10">
         <Header onScanClick={() => setShowPaymentScanner(true)} />
