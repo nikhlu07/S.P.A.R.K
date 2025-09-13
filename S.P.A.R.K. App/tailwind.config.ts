@@ -1,8 +1,13 @@
 import type { Config } from "tailwindcss";
 
-export default {
+const config = {
   darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: [
+    './pages/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+    './app/**/*.{ts,tsx}',
+    './src/**/*.{ts,tsx}',
+  ],
   prefix: "",
   theme: {
     container: {
@@ -14,8 +19,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        'cyber': ['Share Tech Mono', 'monospace'],
-        'neural': ['Orbitron', 'monospace'],
+        sans: ['Inter', 'sans-serif'],
+        tech: ['Share Tech Mono', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -26,8 +31,6 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
-          glow: "hsl(var(--primary-glow))",
-          deep: "hsl(var(--primary-deep))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -45,15 +48,6 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
-        success: {
-          DEFAULT: "hsl(var(--success))",
-          foreground: "hsl(var(--success-foreground))",
-          glow: "hsl(var(--success-glow))",
-        },
-        warning: {
-          DEFAULT: "hsl(var(--warning))",
-          foreground: "hsl(var(--warning-foreground))",
-        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -62,56 +56,11 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        spark: {
-          purple: "hsl(var(--electric-purple))",
-          'purple-light': "hsl(var(--neon-purple))",
-          'purple-dark': "hsl(var(--dark-purple))",
-          gold: "hsl(var(--cyber-gold))",
-          success: "hsl(var(--spark-success))",
-        },
-        matrix: {
-          green: "hsl(var(--matrix-green))",
-          'green-dim': "hsl(var(--matrix-green-dim))",
-        },
-        cyber: {
-          purple: "hsl(var(--electric-purple))",
-          violet: "hsl(var(--deep-violet))",
-          neon: "hsl(var(--neon-purple))",
-          dark: "hsl(var(--dark-purple))",
-        },
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
-        },
-      },
-      backgroundImage: {
-        'gradient-neural': 'var(--gradient-neural)',
-        'gradient-cyber': 'var(--gradient-cyber)',
-        'gradient-electric': 'var(--gradient-electric)',
-        'gradient-glow': 'var(--gradient-glow)',
-        'gradient-card': 'var(--gradient-card)',
-        'gradient-glass': 'var(--gradient-glass)',
-        'gradient-success': 'var(--gradient-success)',
-      },
-      boxShadow: {
-        'neural': 'var(--shadow-neural)',
-        'electric': 'var(--shadow-electric)',
-        'matrix': 'var(--shadow-matrix)',
-        'cyber': 'var(--shadow-cyber)',
-        'deep': 'var(--shadow-deep)',
-        'glow': 'var(--shadow-neural)',
-        'success': 'var(--shadow-success)',
-      },
-      transitionTimingFunction: {
-        'cyber': 'var(--transition-cyber)',
-        'glow': 'var(--transition-glow)',
-        'electric': 'var(--transition-electric)',
+        purple: {
+            'DEFAULT': 'rgba(167, 64, 186, 0.8)',
+            'soft': 'rgba(167, 64, 186, 0.5)',
+            'faint': 'rgba(167, 64, 186, 0.2)',
+        }
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -119,107 +68,45 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
-        // Neural Grid Animation
-        "moveGrid": {
-          "0%": {
-            transform: "translate(0, 0)",
-          },
-          "100%": {
-            transform: "translate(var(--neural-grid-size), var(--neural-grid-size))",
-          },
+        shoot: {
+            '0%': { transform: 'translateX(0) translateY(0) rotate(45deg)', opacity: '1' },
+            '100%': { transform: 'translateX(100vw) translateY(-100vh) rotate(45deg)', opacity: '0' },
         },
-        
-        // Cyberpunk Glow Effects
-        "cyber-glow": {
-          "0%, 100%": {
-            boxShadow: "0 0 20px hsl(267 83% 58% / 0.5)",
-          },
-          "50%": {
-            boxShadow: "0 0 40px hsl(267 83% 58% / 0.8), 0 0 60px hsl(267 83% 58% / 0.4)",
-          },
+        moveGrid: {
+            'from': { backgroundPosition: '0 0' },
+            'to': { backgroundPosition: '3rem 3rem' },
         },
-        
-        // Electric Border Rotation
-        "electric-border": {
-          "0%": {
-            transform: "rotate(0deg)",
-          },
-          "100%": {
-            transform: "rotate(360deg)",
-          },
+        scan: {
+            '0%': { backgroundPosition: '0 0' },
+            '100%': { backgroundPosition: '0 100vh' },
         },
-        
-        // Shooting Stars
-        "shooting-star": {
-          "0%": {
-            transform: "translateX(-100vw) translateY(100vh)",
-            opacity: "0",
-          },
-          "10%": {
-            opacity: "1",
-          },
-          "90%": {
-            opacity: "1",
-          },
-          "100%": {
-            transform: "translateX(100vw) translateY(-100vh)",
-            opacity: "0",
-          },
+        rotate: {
+            '100%': { transform: 'translate(-50%, -50%) rotate(360deg)' },
         },
-        
-        // Neural Pulse
-        "neural-pulse": {
-          "0%, 100%": {
-            opacity: "0.5",
-            transform: "scale(1)",
-          },
-          "50%": {
-            opacity: "1",
-            transform: "scale(1.1)",
-          },
+        fadeIn: {
+            'from': { opacity: '0', transform: 'translateY(20px)' },
+            'to': { opacity: '1', transform: 'translateY(0)' },
         },
-        
-        // Holographic Shimmer
-        "holo-shimmer": {
-          "0%": {
-            backgroundPosition: "-200% center",
-          },
-          "100%": {
-            backgroundPosition: "200% center",
-          },
+        float: {
+            '0%, 100%': { transform: 'translateY(0px)' },
+            '50%': { transform: 'translateY(-10px)' },
         },
-        
-        // Matrix Data Stream
-        "data-stream": {
-          "0%": {
-            transform: "translateY(-100%)",
-            opacity: "0",
-          },
-          "10%": {
-            opacity: "1",
-          },
-          "90%": {
-            opacity: "1",
-          },
-          "100%": {
-            transform: "translateY(100vh)",
-            opacity: "0",
-          },
+        'pulse-glow': {
+            '0%, 100%': { boxShadow: '0 0 20px rgba(167, 64, 186, 0.2)' },
+            '50%': { boxShadow: '0 0 40px rgba(167, 64, 186, 0.5)' },
         },
-        
-        // Floating with Glow
-        "float-glow": {
-          "0%, 100%": {
-            transform: "translateY(0px)",
-            boxShadow: "0 5px 20px hsl(267 83% 58% / 0.3)",
-          },
-          "50%": {
-            transform: "translateY(-15px)",
-            boxShadow: "0 15px 40px hsl(267 83% 58% / 0.5)",
-          },
+        typing: {
+            'from': { width: '0' },
+            'to': { width: '100%' },
         },
-        
-        // Classic animations enhanced
+        'blink-caret': {
+            'from, to': { borderColor: 'transparent' },
+            '50%': { borderColor: 'rgba(167, 64, 186, 0.8)' },
+        },
+        'pulse-green': {
+            '0%, 100%': { opacity: '1' },
+            '50%': { opacity: '0.5' },
+        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -230,21 +117,31 @@ export default {
         },
       },
       animation: {
-        // Core animations
+        shoot: 'shoot 5s linear infinite',
+        moveGrid: 'moveGrid 20s linear infinite',
+        scan: 'scan 7s linear infinite',
+        rotate: 'rotate 4s linear infinite',
+        fadeIn: 'fadeIn 1s ease-out forwards',
+        float: 'float 6s ease-in-out infinite',
+        'pulse-glow': 'pulse-glow 3s infinite',
+        typing: 'typing 3.5s steps(40, end), blink-caret .75s step-end infinite',
+        'pulse-green': 'pulse-green 2s infinite',
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        
-        // Cyberpunk animations
-        "moveGrid": "moveGrid 20s linear infinite",
-        "cyber-glow": "cyber-glow 3s ease-in-out infinite",
-        "electric-border": "electric-border 4s linear infinite",
-        "shooting-star": "shooting-star 3s linear infinite",
-        "neural-pulse": "neural-pulse 2s ease-in-out infinite",
-        "holo-shimmer": "holo-shimmer 2s ease-in-out infinite",
-        "data-stream": "data-stream 4s linear infinite",
-        "float-glow": "float-glow 4s ease-in-out infinite",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+      require("tailwindcss-animate"),
+      function ({ addUtilities, theme }) {
+        const newUtilities = {
+            '.text-glow': {
+                textShadow: `0 0 8px ${theme('colors.purple.soft')}, 0 0 24px ${theme('colors.purple.faint')}`,
+            },
+        }
+        addUtilities(newUtilities, ['responsive', 'hover'])
+      }
+    ],
 } satisfies Config;
+
+export default config;

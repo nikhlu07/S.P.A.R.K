@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Heart, MapPin, Users, Zap, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ interface DealCardProps {
     friendsLove: number;
   };
   deal: {
+    id: string;
     title: string;
     description: string;
     discount: string;
@@ -22,11 +24,10 @@ interface DealCardProps {
     trending?: boolean;
   };
   onShare?: () => void;
-  onClaim?: () => void;
   className?: string;
 }
 
-export function DealCard({ business, deal, onShare, onClaim, className }: DealCardProps) {
+export function DealCard({ business, deal, onShare, className }: DealCardProps) {
   return (
     <div className={cn(
       "relative overflow-hidden rounded-lg bg-gradient-card shadow-card border border-border/50",
@@ -129,15 +130,16 @@ export function DealCard({ business, deal, onShare, onClaim, className }: DealCa
             <Heart className="w-3 h-3 mr-1" />
             Share
           </Button>
-          <Button 
-            variant="default" 
-            size="sm" 
-            onClick={onClaim}
-            className="flex-1 bg-gradient-primary hover:shadow-glow transition-all duration-300"
-          >
-            <Zap className="w-3 h-3 mr-1" />
-            Claim Now
-          </Button>
+          <Link to={`/deal/${deal.id}`} className="flex-1">
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="w-full bg-gradient-primary hover:shadow-glow transition-all duration-300"
+            >
+              <Zap className="w-3 h-3 mr-1" />
+              Claim Now
+            </Button>
+          </Link>
         </div>
       </div>
 

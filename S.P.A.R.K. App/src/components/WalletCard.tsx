@@ -7,14 +7,17 @@ interface WalletCardProps {
   balance: number;
   usdBalance: number;
   address: string;
+  networkName: string;
+  currencySymbol: string;
   className?: string;
 }
 
-export function WalletCard({ balance, usdBalance, address, className }: WalletCardProps) {
+export function WalletCard({ balance, usdBalance, address, networkName, currencySymbol, className }: WalletCardProps) {
   const [showBalance, setShowBalance] = useState(true);
   
   const formatBalance = (amount: number) => {
-    return showBalance ? `₹${amount.toLocaleString()}` : "₹••••••";
+    if (!showBalance) return `•••••• ${currencySymbol}`;
+    return `${amount.toLocaleString(undefined, {maximumFractionDigits: 4})} ${currencySymbol}`;
   };
 
   const copyAddress = () => {
@@ -41,8 +44,8 @@ export function WalletCard({ balance, usdBalance, address, className }: WalletCa
               <Wallet className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-semibold text-lg">Meta Wallet</h3>
-              <p className="text-primary-foreground/70 text-sm">Ethereum</p>
+              <h3 className="font-semibold text-lg">MetaMask Wallet</h3>
+              <p className="text-primary-foreground/70 text-sm">{networkName}</p>
             </div>
           </div>
           
