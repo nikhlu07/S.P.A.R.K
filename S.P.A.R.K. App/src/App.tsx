@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +18,7 @@ import BusinessLoginPage from "./pages/business/BusinessLoginPage";
 import BusinessRegisterPage from "./pages/business/BusinessRegisterPage";
 import BusinessWelcomePage from "./pages/business/BusinessWelcomePage";
 import BusinessVerificationPage from "./pages/business/BusinessVerificationPage";
+import LocalExchangeListing from "./pages/business/LocalExchangeListing";
 
 const queryClient = new QueryClient();
 
@@ -30,7 +32,7 @@ const App = () => (
 
           <Route element={<MainLayout />}>
             <Route path="/" element={<SparkHome />} />
-            <Route path="/explore-viral-deals" element={<ExploreViralDeals />} />8
+            <Route path="/explore-viral-deals" element={<ExploreViralDeals />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/deal/:dealId" element={<DealDetails />} />
             <Route path="/discover-rewards" element={<DiscoverRewards />} />
@@ -43,6 +45,7 @@ const App = () => (
             <Route path="register" element={<BusinessRegisterPage />} />
             <Route path="dashboard" element={<BusinessDashboard />} />
             <Route path="verify" element={<BusinessVerificationPage />} />
+            <Route path="exchange-listing" element={<LocalExchangeListing />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
