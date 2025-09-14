@@ -1,31 +1,41 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Bell, QrCode } from 'lucide-react';
+import { Bell, QrCode, Menu, X } from 'lucide-react';
 import { PaymentScanner } from '@/components/PaymentScanner';
-import { ethers } from "ethers";
+import { cn } from '@/lib/utils';
+import { ethers } from 'ethers';
 
-declare global {
-    interface Window {
-        ethereum?: any;
-    }
-}
-
-// Kaia Kairos Testnet Configuration
-const KAIA_CHAIN_ID = '0x3e9'; // 1001
-const KAIA_NETWORK_PARAMS = {
-  chainId: KAIA_CHAIN_ID,
+const KAIA_TESTNET = {
+  chainId: '0x3E9', // 1001
   chainName: 'Kaia Kairos Testnet',
-  nativeCurrency: {
-    name: 'KAIA',
-    symbol: 'KAIA',
-    decimals: 18,
-  },
+  nativeCurrency: { name: 'KAIA', symbol: 'KAIA', decimals: 18 },
   rpcUrls: ['https://public-en-kairos.node.kaia.io'],
   blockExplorerUrls: ['https://kairos.kaiaexplorer.io/'],
 };
 
-const Header = ({ onScanClick }: { onScanClick: () => void }) => (
+const Header = ({ onScanClick, isLoggedIn, logout }: { onScanClick: () => void; isLoggedIn: boolean; logout: () => void }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [time, setTime] = useState('');
+
+  useEffect(() => {
+      const timer = setInterval(() => {
+          const now = new Date();
+          const options: Intl.DateTimeFormatOptions = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+          setTime(now.toLocaleTimeString('en-US', options).replace(' ', '') + ' IST');
+      }, 1000);
+      return () => clearInterval(timer);
+  }, []);
+
+  const navLinks = [
+    { to: '/', label: 'Home' },
+    { to: '/explore-viral-deals', label: 'Explore Deals' },
+    { to: '/notifications', label: 'Notifications' },
+    { to: '/discover-rewards', label: 'Discover Rewards' },
+    ...(isLoggedIn ? [{ to: '/profile', label: 'Profile' }] : [{ to: '/login', label: 'Login/Register' }]),
+  ];
+
+  return (
     <header className="sticky top-0 z-50 bg-black/30 backdrop-blur-md border-b border-gray-800/50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
@@ -35,23 +45,62 @@ const Header = ({ onScanClick }: { onScanClick: () => void }) => (
                         <span className="font-tech text-2xl font-bold tracking-wider text-white text-glow">S.P.A.R.K.</span>
                     </Link>
                 </div>
+                <nav className="hidden md:flex items-center gap-4">
+                  {navLinks.map(link => (
+                    <NavLink
+                      key={link.to}
+                      to={link.to}
+                      className={({ isActive }) =>
+                        cn(
+                          "font-tech text-sm uppercase tracking-wider transition-colors",
+                          isActive ? "text-purple-400 text-glow" : "text-gray-400 hover:text-white"
+                        )
+                      }
+                    >
+                      {link.label}
+                    </NavLink>
+                  ))}
+                  {isLoggedIn && <Button onClick={logout} variant="ghost" className="font-tech text-sm uppercase tracking-wider text-gray-400 hover:text-white">Logout</Button>}
+                </nav>
                 <div className="flex items-center gap-2">
-                    <Link to="/notifications">
-                        <Button variant="ghost" size="icon" className="relative text-gray-300 hover:text-purple-400">
-                            <Bell className="w-5 h-5" />
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full flex items-center justify-center">
-                                <div className="w-1.5 h-1.5 bg-white rounded-full" />
-                            </div>
-                        </Button>
-                    </Link>
+                    <div className="hidden md:flex items-center gap-2 font-tech text-sm text-gray-400">
+                      <span className="status-light"></span>
+                      <span>{time}</span>
+                    </div>
                     <Button variant="ghost" size="icon" onClick={onScanClick} className="text-gray-300 hover:text-purple-400">
                         <QrCode className="w-5 h-5" />
                     </Button>
+                    <div className="md:hidden">
+                      <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                        {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                      </Button>
+                    </div>
                 </div>
             </div>
+            {isMenuOpen && (
+              <nav className="md:hidden py-4 space-y-2">
+                {navLinks.map(link => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={({ isActive }) =>
+                      cn(
+                        "block font-tech text-lg uppercase tracking-wider transition-colors py-2 text-center",
+                        isActive ? "text-purple-400 text-glow bg-purple-500/10 rounded-lg" : "text-gray-400 hover:text-white"
+                      )
+                    }
+                  >
+                    {link.label}
+                  </NavLink>
+                ))}
+                {isLoggedIn && <Button onClick={() => { logout(); setIsMenuOpen(false); }} variant="ghost" className="w-full font-tech text-lg uppercase tracking-wider text-gray-400 hover:text-white">Logout</Button>}
+              </nav>
+            )}
         </div>
     </header>
-);
+  );
+}
 
 const FloatingScanButton = ({ onClick }: { onClick: () => void }) => (
   <div className="fixed bottom-6 right-6 z-40">
@@ -66,131 +115,89 @@ const FloatingScanButton = ({ onClick }: { onClick: () => void }) => (
 
 export type AppContext = {
   setShowPaymentScanner: React.Dispatch<React.SetStateAction<boolean>>;
-  walletAddress?: string;
-  walletBalance?: number;
-  walletUsdBalance?: number;
+  walletAddress: string | null;
+  walletBalance: number;
+  walletUsdBalance: number;
   isLoggedIn: boolean;
-  connectWallet: () => void;
+  connectWallet: () => Promise<void>;
+  logout: () => void;
 };
 
 const MainLayout = () => {
   const [showPaymentScanner, setShowPaymentScanner] = useState(false);
-  const [walletAddress, setWalletAddress] = useState<string | undefined>();
-  const [walletBalance, setWalletBalance] = useState<number | undefined>();
-  const [walletUsdBalance, setWalletUsdBalance] = useState<number | undefined>();
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [walletUsdBalance, setWalletUsdBalance] = useState<number>(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const updateWalletState = useCallback(async (accounts: string[]) => {
-    if (accounts.length > 0 && accounts[0]) {
-      const address = accounts[0];
-      setWalletAddress(address);
-      setIsLoggedIn(true);
-      try {
-        if (!window.ethereum) throw new Error("No crypto wallet found");
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const { chainId } = await provider.getNetwork();
-
-        if (String(chainId) === "1001") {
-            const balance = await provider.getBalance(address);
-            const balanceInEth = parseFloat(ethers.formatEther(balance));
-            setWalletBalance(balanceInEth);
-            // Mock USD value, in a real app, you'd use a price oracle for KAIA price
-            setWalletUsdBalance(balanceInEth * 0.15); 
-        } else {
-            setWalletBalance(0);
-            setWalletUsdBalance(0);
-        }
-      } catch (error) {
-        console.error("Error fetching balance:", error);
-        setWalletBalance(undefined);
-        setWalletUsdBalance(undefined);
-      }
-    } else {
-      setWalletAddress(undefined);
-      setWalletBalance(undefined);
-      setWalletUsdBalance(undefined);
-      setIsLoggedIn(false);
+  const connectWallet = async () => {
+    if (!window.ethereum) {
+      alert("MetaMask is not installed. Please install it to use this feature.");
+      return;
     }
-  }, []);
 
-  const connectWallet = useCallback(async () => {
-    if (window.ethereum) {
-      try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const { chainId } = await provider.getNetwork();
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
 
-        if (String(chainId) !== "1001") {
-          try {
+      const network = await provider.getNetwork();
+      if (network.chainId !== BigInt(KAIA_TESTNET.chainId)) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: KAIA_TESTNET.chainId }],
+          });
+        } catch (switchError: unknown) {
+          const error = switchError as { code?: number };
+          if (error.code === 4902) {
             await window.ethereum.request({
-              method: 'wallet_switchEthereumChain',
-              params: [{ chainId: KAIA_CHAIN_ID }],
+              method: 'wallet_addEthereumChain',
+              params: [KAIA_TESTNET],
             });
-          } catch (switchError: any) {
-            if (switchError.code === 4902) {
-              try {
-                await window.ethereum.request({
-                  method: 'wallet_addEthereumChain',
-                  params: [KAIA_NETWORK_PARAMS],
-                });
-              } catch (addError) {
-                console.error('Failed to add Kaia network:', addError);
-                alert("Failed to add the Kaia Kairos Testnet to your wallet. Please add it manually.");
-                return;
-              }
-            } else {
-                console.error('Failed to switch network:', switchError);
-                alert("Failed to switch to the Kaia Kairos Testnet. Please switch manually in your wallet.");
-                return;
-            }
+          } else {
+            console.error("Failed to switch wallet:", error);
+            alert("Failed to switch wallet. See console for more details.");
+            return;
           }
         }
-        
-        const accounts = await provider.send("eth_requestAccounts", []);
-        updateWalletState(accounts);
-
-      } catch (error) {
-        console.error("Error connecting to MetaMask:", error);
       }
-    } else {
-      alert("Please install MetaMask to use this feature.");
-    }
-  }, [updateWalletState]);
 
-  useEffect(() => {
-    if (typeof window.ethereum !== 'undefined') {
-      const handleAccountsChanged = (accounts: string[]) => {
-          updateWalletState(accounts);
-      };
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+      const balance = await provider.getBalance(address);
 
-      const handleChainChanged = () => {
-        window.location.reload();
-      };
-
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
-      window.ethereum.on('chainChanged', handleChainChanged);
-
-      const checkInitialConnection = async () => {
-        try {
-          const provider = new ethers.BrowserProvider(window.ethereum);
-          const signers = await provider.listAccounts();
-          if (signers.length > 0 && signers[0]) {
-            const address = await signers[0].getAddress();
-            updateWalletState([address]);
-         }
-        } catch (err) {
-          console.error("Could not get accounts:", err);
+      const formattedBalance = parseFloat(ethers.formatUnits(balance, 18));
+      
+      let kaiaUsdPrice = 0.15; // Default price
+      try {
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=kaia&vs_currencies=usd');
+        if (!response.ok) {
+          throw new Error('Failed to fetch price');
         }
-      };
-      checkInitialConnection();
-
-      return () => {
-        if (window.ethereum.removeListener) {
-          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-          window.ethereum.removeListener('chainChanged', handleChainChanged);
+        const data = await response.json();
+        if (data.kaia && data.kaia.usd) {
+          kaiaUsdPrice = data.kaia.usd;
         }
-      };
+      } catch (priceError) {
+        console.error("Could not fetch KAIA price, using default:", priceError);
+      }
+
+      setWalletAddress(address);
+      setWalletBalance(formattedBalance);
+      setWalletUsdBalance(formattedBalance * kaiaUsdPrice);
+      setIsLoggedIn(true);
+
+    } catch (error) {
+      console.error("Failed to connect wallet:", error);
+      alert("Failed to connect wallet. See console for more details.");
     }
-  }, [updateWalletState]);
+  };
+
+  const logout = () => {
+    setWalletAddress(null);
+    setWalletBalance(0);
+    setWalletUsdBalance(0);
+    setIsLoggedIn(false);
+  };
 
   return (
     <div className="min-h-screen bg-black text-gray-200 font-sans relative antialiased">
@@ -205,16 +212,9 @@ const MainLayout = () => {
       <div className="scanline-overlay"></div>
 
       <div className="relative z-10">
-        <Header onScanClick={() => setShowPaymentScanner(true)} />
+        <Header onScanClick={() => setShowPaymentScanner(true)} isLoggedIn={isLoggedIn} logout={logout} />
         <main className="container mx-auto px-4 py-6 space-y-8">
-          <Outlet context={{ 
-            setShowPaymentScanner,
-            walletAddress,
-            walletBalance,
-            walletUsdBalance,
-            isLoggedIn,
-            connectWallet 
-          }} />
+          <Outlet context={{ setShowPaymentScanner, walletAddress, walletBalance, walletUsdBalance, isLoggedIn, connectWallet, logout }} />
         </main>
         <FloatingScanButton onClick={() => setShowPaymentScanner(true)} />
       </div>

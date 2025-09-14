@@ -11,6 +11,9 @@ import DealDetails from "./pages/DealDetails";
 import DiscoverRewards from "./pages/DiscoverRewards";
 import Invest from "./pages/Invest";
 import NotFound from "./pages/NotFound";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import ProfilePage from "./pages/ProfilePage";
 
 const queryClient = new QueryClient();
 
