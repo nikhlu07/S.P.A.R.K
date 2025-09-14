@@ -142,7 +142,7 @@ export default function SparkHome() {
 
 const Hero = ({ onScanClick }: { onScanClick: () => void }) => {
     return (
-        <section className="relative hero-bg pt-16 pb-10 md:pt-20 md:pb-14">
+        <section className="relative hero-bg pt-8 pb-10 md:pt-20 md:pb-14">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 <div className="font-tech text-purple-400 text-sm mb-4 flex justify-center items-center space-x-4">
                     <div className="flex items-center space-x-2">
@@ -209,7 +209,7 @@ const Tabs = ({ activeTab, setActiveTab }: { activeTab: Tab, setActiveTab: (tab:
           key={tab.id}
           onClick={() => setActiveTab(tab.id)}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-tech font-bold uppercase tracking-wide transition-all duration-300",
+            "flex-1 flex items-center justify-center gap-2 px-2 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-tech font-bold uppercase tracking-wide transition-all duration-300",
             activeTab === tab.id
               ? "bg-purple-500/10 text-white text-glow"
               : "text-gray-400 hover:text-white hover:bg-purple-500/5"

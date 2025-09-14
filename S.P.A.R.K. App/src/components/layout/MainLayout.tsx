@@ -32,7 +32,7 @@ const Header = ({ onScanClick, isLoggedIn, logout }: { onScanClick: () => void; 
     { to: '/explore-viral-deals', label: 'Explore Deals' },
     { to: '/notifications', label: 'Notifications' },
     { to: '/discover-rewards', label: 'Discover Rewards' },
-    ...(isLoggedIn ? [{ to: '/profile', label: 'Profile' }] : [{ to: '/login', label: 'Login/Register' }]),
+    // ...(isLoggedIn ? [{ to: '/profile', label: 'Profile' }] : [{ to: '/login', label: 'Login/Register' }]),
   ];
 
   return (
@@ -68,11 +68,11 @@ const Header = ({ onScanClick, isLoggedIn, logout }: { onScanClick: () => void; 
                       <span>{time}</span>
                     </div>
                     <Button variant="ghost" size="icon" onClick={onScanClick} className="text-gray-300 hover:text-purple-400">
-                        <QrCode className="w-5 h-5" />
+                        <QrCode className="w-6 h-6" />
                     </Button>
                     <div className="md:hidden">
                       <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                        {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                        {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                       </Button>
                     </div>
                 </div>
@@ -103,7 +103,7 @@ const Header = ({ onScanClick, isLoggedIn, logout }: { onScanClick: () => void; 
 }
 
 const FloatingScanButton = ({ onClick }: { onClick: () => void }) => (
-  <div className="fixed bottom-6 right-6 z-40">
+  <div className="fixed bottom-6 right-6 z-40 hidden md:flex">
     <button
       className="glow-button rounded-full w-16 h-16 flex items-center justify-center"
       onClick={onClick}
@@ -213,7 +213,7 @@ const MainLayout = () => {
 
       <div className="relative z-10">
         <Header onScanClick={() => setShowPaymentScanner(true)} isLoggedIn={isLoggedIn} logout={logout} />
-        <main className="container mx-auto px-4 py-6 space-y-8">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
           <Outlet context={{ setShowPaymentScanner, walletAddress, walletBalance, walletUsdBalance, isLoggedIn, connectWallet, logout }} />
         </main>
         <FloatingScanButton onClick={() => setShowPaymentScanner(true)} />
