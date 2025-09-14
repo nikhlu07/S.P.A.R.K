@@ -1,78 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-
-const mockDeals = [
-  {
-    id: '1',
-    title: '50% Off All Pizzas',
-    description: 'Enjoy a flat 50% discount on all pizza varieties. Limited time offer!',
-    store: 'Pizza Place',
-    image: 'https://via.placeholder.com/350/FF5733/FFFFFF?text=Pizza',
-    discount: '50%',
-    category: 'Food',
-    endDate: '2024-12-31',
-  },
-  {
-    id: '2',
-    title: 'BOGO on Coffee',
-    description: 'Buy any coffee and get another one absolutely free. Perfect for sharing!',
-    store: 'Coffee Corner',
-    image: 'https://via.placeholder.com/350/C70039/FFFFFF?text=Coffee',
-    discount: 'BOGO',
-    category: 'Beverages',
-    endDate: '2024-11-30',
-  },
-  {
-    id: '3',
-    title: '20% Off Electronics',
-    description: 'Get a 20% discount on a wide range of electronics. Upgrade your gadgets now!',
-    store: 'Tech World',
-    image: 'https://via.placeholder.com/350/900C3F/FFFFFF?text=Tech',
-    discount: '20%',
-    category: 'Electronics',
-    endDate: '2024-12-15',
-  },
-  {
-    id: '4',
-    title: '30% Off Fashion',
-    description: 'Update your wardrobe with the latest trends and get 30% off.',
-    store: 'Style Hub',
-    image: 'https://via.placeholder.com/350/581845/FFFFFF?text=Fashion',
-    discount: '30%',
-    category: 'Apparel',
-    endDate: '2024-11-25',
-  },
-  {
-    id: '5',
-    title: 'Free Dessert with Meal',
-    description: 'Enjoy a complimentary dessert with every main course ordered.',
-    store: 'Gourmet Garden',
-    image: 'https://via.placeholder.com/350/DAF7A6/000000?text=Dessert',
-    discount: 'Free',
-    category: 'Food',
-    endDate: '2024-12-01',
-  },
-  {
-    id: '6',
-    title: '15% Off Books',
-    description: 'Expand your library with a 15% discount on all books.',
-    store: 'Readers Nook',
-    image: 'https://via.placeholder.com/350/FFC300/000000?text=Books',
-    discount: '15%',
-    category: 'Books',
-    endDate: '2024-12-10',
-  },
-];
+import { DealDialog } from '@/components/DealDialog';
+import { mockDeals, mockBusinesses } from '@/data/mockData';
 
 const ExploreViralDeals = () => {
-  const [deals, setDeals] = useState([]);
+  const [deals, setDeals] = useState<any[]>([]);
+  const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
-    // In a real app, you would fetch this data from an API
-    setDeals(mockDeals);
+    const dealsWithBusiness = mockDeals.map(deal => {
+      const business = mockBusinesses.find(b => b.id === deal.businessId);
+      return { ...deal, store: business ? business.name : 'Unknown Store' };
+    });
+    setDeals(dealsWithBusiness);
   }, []);
+
+  const handleViewDeal = (dealId: string) => {
+    setSelectedDealId(dealId);
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedDealId(null);
+  };
 
   return (
     <>
@@ -101,13 +54,16 @@ const ExploreViralDeals = () => {
               <div className="text-sm text-gray-400 font-tech">
                 Expires: {new Date(deal.endDate).toLocaleDateString()}
               </div>
-              <Link to={`/deal/${deal.id}`}>
-                <Button variant="cyber">View Deal</Button>
-              </Link>
+              <Button variant="cyber" onClick={() => handleViewDeal(deal.id)}>View Deal</Button>
             </CardFooter>
           </Card>
         ))}
       </div>
+      <DealDialog
+        dealId={selectedDealId}
+        isOpen={isDialogOpen}
+        onClose={handleCloseDialog}
+      />
     </>
   );
 };

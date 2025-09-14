@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { Heart, MapPin, Users, Zap, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,15 +18,16 @@ interface DealCardProps {
     title: string;
     description: string;
     discount: string;
-    validUntil: string;
+    endDate: string;
     nftCoupon?: boolean;
     trending?: boolean;
   };
   onShare?: () => void;
+  onViewDeal: (dealId: string) => void;
   className?: string;
 }
 
-export function DealCard({ business, deal, onShare, className }: DealCardProps) {
+export function DealCard({ business, deal, onShare, onViewDeal, className }: DealCardProps) {
   return (
     <div className={cn(
       "relative overflow-hidden rounded-lg bg-gradient-card shadow-card border border-border/50",
@@ -116,7 +116,7 @@ export function DealCard({ business, deal, onShare, className }: DealCardProps) 
 
         {/* Validity */}
         <div className="text-xs text-muted-foreground mb-4">
-          Valid until {deal.validUntil}
+          Valid until {new Date(deal.endDate).toLocaleDateString()}
         </div>
 
         {/* Action Buttons */}
@@ -130,25 +130,24 @@ export function DealCard({ business, deal, onShare, className }: DealCardProps) 
             <Heart className="w-3 h-3 mr-1" />
             Share
           </Button>
-          <Link to={`/deal/${deal.id}`} className="flex-1">
-            <Button 
-              variant="default" 
-              size="sm" 
-              className="w-full bg-gradient-primary hover:shadow-glow transition-all duration-300"
-            >
-              <Zap className="w-3 h-3 mr-1" />
-              Claim Now
-            </Button>
-          </Link>
+          <Button 
+            variant="default" 
+            size="sm" 
+            onClick={() => onViewDeal(deal.id)}
+            className="flex-1 bg-gradient-primary hover:shadow-glow transition-all duration-300"
+          >
+            <Zap className="w-3 h-3 mr-1" />
+            Claim Now
+          </Button>
         </div>
       </div>
 
       {/* Shine effect for NFT coupons */}
-      {deal.nftCoupon && (
-        <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-500">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-spark-shine" />
-        </div>
-      )}
+      {/*{deal.nftCoupon && (*/}
+      {/*  <div className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity duration-500">*/}
+      {/*    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-spark-shine" />*/}
+      {/*  </div>*/}
+      {/*)}*/}
     </div>
   );
 }

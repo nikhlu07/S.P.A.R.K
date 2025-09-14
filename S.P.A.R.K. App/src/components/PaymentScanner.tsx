@@ -3,6 +3,7 @@ import { QrCode, Camera, X, Zap, Check, Heart, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { mockTransactions } from "@/data/mockData";
 
 interface PaymentScannerProps {
   isOpen: boolean;
@@ -27,6 +28,13 @@ export function PaymentScanner({ isOpen, onClose }: PaymentScannerProps) {
     }
   };
 
+  const handleClose = () => {
+    onClose();
+    setTimeout(() => {
+        setStep('scanning');
+    }, 300); // Delay to allow for closing animation
+  };
+
   const handleScan = () => {
     // Simulate QR code scanning
     setTimeout(() => setStep('business'), 1000);
@@ -35,7 +43,21 @@ export function PaymentScanner({ isOpen, onClose }: PaymentScannerProps) {
   const handlePayment = () => {
     setStep('payment');
     // Simulate payment processing
-    setTimeout(() => setStep('success'), 2000);
+    setTimeout(() => {
+        // Create a transaction record
+        const newTransaction = {
+            id: `txn_${Date.now()}`,
+            businessName: scannedBusiness.name,
+            amount: (amount * 0.8).toFixed(0),
+            date: new Date().toISOString(),
+            tokensEarned: scannedBusiness.offers.tokensEarned,
+        };
+        mockTransactions.unshift(newTransaction); // Add to the beginning of the array
+        console.log("New transaction recorded:", newTransaction);
+        console.log("All transactions:", mockTransactions);
+
+        setStep('success');
+    }, 2000);
   };
 
   const handleShare = () => {
@@ -54,7 +76,7 @@ export function PaymentScanner({ isOpen, onClose }: PaymentScannerProps) {
             <QrCode className="w-5 h-5 text-primary" />
             SPARK Pay
           </h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="w-5 h-5" />
           </Button>
         </div>
@@ -186,7 +208,7 @@ export function PaymentScanner({ isOpen, onClose }: PaymentScannerProps) {
                 <Share className="w-4 h-4 mr-2" />
                 Share to LINE
               </Button>
-              <Button variant="cyber" className="flex-1" onClick={onClose}>
+              <Button variant="cyber" className="flex-1" onClick={handleClose}>
                 <Heart className="w-4 h-4 mr-2" />
                 Done
               </Button>

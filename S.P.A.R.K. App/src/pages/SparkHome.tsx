@@ -1,19 +1,14 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
-import { ethers } from "ethers";
 import {
-  MapPin,
-  Bell,
-  QrCode,
   Search,
   Filter,
   Zap,
   Heart,
-  Users,
   TrendingUp,
-  Gift,
-  Plus,
-  ArrowRight,
+  Repeat,
+  QrCode,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -22,31 +17,20 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { WalletCard } from "@/components/WalletCard";
 import { DealCard } from "@/components/DealCard";
-import { RewardToken } from "@/components/RewardToken";
-import { CommunityLeaderboard } from "@/components/CommunityLeaderboard";
+import { DealDialog } from "@/components/DealDialog";
+import { LearnMoreDialog } from "@/components/LearnMoreDialog";
 import type { AppContext } from "@/components/layout/MainLayout";
 
 import {
   mockBusinesses,
   mockDeals,
-  mockRewardTokens,
-  mockLeaderboard,
   mockUserStats,
   mockCommunityStats,
 } from "@/data/mockData";
-
-// --- Augmenting global types ---
-interface Eip1193Provider {
-  request(args: { method: string; params?: unknown[] | object }): Promise<unknown>;
-}
-declare global {
-  interface Window {
-    ethereum?: Eip1193Provider;
-  }
-}
+import TransactionsPage from "./TransactionsPage";
 
 // --- TYPES ---
-type Tab = 'deals' | 'rewards' | 'community';
+type Tab = 'deals' | 'invest' | 'transactions';
 type Business = (typeof mockBusinesses)[0];
 type Deal = (typeof mockDeals)[0];
 type DealWithBusiness = {
@@ -55,29 +39,21 @@ type DealWithBusiness = {
 };
 
 // --- CONSTANTS ---
-const KAIA_TESTNET = {
-  chainId: '0x3E9', // 1001
-  chainName: 'Kaia Kairos Testnet',
-  nativeCurrency: { name: 'KAIA', symbol: 'KAIA', decimals: 18 },
-  rpcUrls: ['https://public-en-kairos.node.kaia.io'],
-  blockExplorerUrls: ['https://kairos.kaiaexplorer.io/'],
-};
-
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'deals', label: 'VIRAL DEALS', icon: Zap },
-  { id: 'rewards', label: 'NEURAL REWARDS', icon: Gift },
-  { id: 'community', label: 'MATRIX HUB', icon: Users },
+  { id: 'invest', label: 'INVEST & EARN', icon: TrendingUp },
+  { id: 'transactions', label: 'TRANSACTIONS', icon: Repeat },
 ];
 
 // --- HELPER COMPONENTS ---
 
-const UserStats = () => (
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-    <StatCard value={mockUserStats.businessesSupported} label="Business Nodes" />
-    <StatCard value={mockUserStats.tokensEarned.toFixed(2)} label="Tokens Mined" className="text-purple-400" />
-    <StatCard value={mockUserStats.nftCouponsCollected} label="NFT Assets" className="text-purple-400" />
-    <StatCard value={`#${mockUserStats.communityRank}`} label="Neural Rank" />
-  </div>
+const UserStats = ({ walletBalance }: { walletBalance?: number }) => (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard value={mockUserStats.businessesSupported} label="Business Nodes" />
+        <StatCard value={(walletBalance ?? mockUserStats.tokensEarned).toFixed(2)} label="Tokens Mined" className="text-purple-400" />
+        <StatCard value={mockUserStats.nftCouponsCollected} label="NFT Assets" className="text-purple-400" />
+        <StatCard value={`#${mockUserStats.communityRank}`} label="Neural Rank" />
+    </div>
 );
 
 const StatCard = ({ value, label, className }: { value: string | number; label: string; className?: string }) => (
@@ -90,58 +66,27 @@ const StatCard = ({ value, label, className }: { value: string | number; label: 
 // --- MAIN APP COMPONENT ---
 
 export default function SparkHome() {
-  const { setShowPaymentScanner } = useOutletContext<AppContext>();
+  const { 
+    setShowPaymentScanner,
+    walletAddress,
+    walletBalance,
+    walletUsdBalance,
+    connectWallet,
+    isLoggedIn,
+  } = useOutletContext<AppContext>();
   const [activeTab, setActiveTab] = useState<Tab>('deals');
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [walletBalance, setWalletBalance] = useState<number>(0);
-  const [walletUsdBalance, setWalletUsdBalance] = useState<number>(0);
+  const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLearnMoreOpen, setIsLearnMoreOpen] = useState(false);
 
-  const connectWallet = async () => {
-    if (!window.ethereum) {
-      alert("MetaMask is not installed. Please install it to use this feature.");
-      return;
-    }
+  const handleViewDeal = (dealId: string) => {
+    setSelectedDealId(dealId);
+    setIsDialogOpen(true);
+  };
 
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-
-      const network = await provider.getNetwork();
-      if (network.chainId !== BigInt(KAIA_TESTNET.chainId)) {
-        try {
-          await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: KAIA_TESTNET.chainId }],
-          });
-        } catch (switchError: unknown) {
-          const error = switchError as { code?: number };
-          if (error.code === 4902) {
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [KAIA_TESTNET],
-            });
-          } else {
-            console.error("Failed to switch wallet:", error);
-            alert("Failed to switch wallet. See console for more details.");
-            return;
-          }
-        }
-      }
-
-      const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-      const balance = await provider.getBalance(address);
-
-      const formattedBalance = parseFloat(ethers.formatUnits(balance, 18));
-      const kaiaUsdPrice = 0.15; // In a real app, this would be fetched from an oracle
-
-      setWalletAddress(address);
-      setWalletBalance(formattedBalance);
-      setWalletUsdBalance(formattedBalance * kaiaUsdPrice);
-
-    } catch (error) {
-      console.error("Failed to connect wallet:", error);
-      alert("Failed to connect wallet. See console for more details.");
-    }
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedDealId(null);
   };
 
   const dealsWithBusinesses: DealWithBusiness[] = mockDeals.map(deal => ({
@@ -155,11 +100,11 @@ export default function SparkHome() {
   const renderContent = () => {
     switch (activeTab) {
       case 'deals':
-        return <DealsContent trendingDeals={trendingDeals} localDeals={localDeals} />;
-      case 'rewards':
-        return <RewardsContent />;
-      case 'community':
-        return <CommunityContent />;
+        return <DealsContent trendingDeals={trendingDeals} localDeals={localDeals} onViewDeal={handleViewDeal} />;
+      case 'invest':
+        return <InvestContent onLearnMoreClick={() => setIsLearnMoreOpen(true)} />;
+      case 'transactions':
+        return <TransactionsPage />;
       default:
         return null;
     }
@@ -168,21 +113,27 @@ export default function SparkHome() {
   return (
     <>
       <Hero onScanClick={() => setShowPaymentScanner(true)} />
-      {walletAddress ? (
+      {isLoggedIn && walletAddress ? (
         <WalletCard
           balance={walletBalance}
           usdBalance={walletUsdBalance}
           address={walletAddress}
-          networkName={KAIA_TESTNET.chainName}
-          currencySymbol={KAIA_TESTNET.nativeCurrency.symbol}
+          networkName="Kaia Kairos Testnet"
+          currencySymbol="KAIA"
         />
       ) : (
         <ConnectWallet onConnect={connectWallet} />
       )}
-      <UserStats />
+      <UserStats walletBalance={isLoggedIn ? walletBalance : undefined} />
       <SearchBar />
       <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
       {renderContent()}
+      <DealDialog
+        dealId={selectedDealId}
+        isOpen={isDialogOpen}
+        onClose={handleCloseDialog}
+      />
+      <LearnMoreDialog isOpen={isLearnMoreOpen} onClose={() => setIsLearnMoreOpen(false)} />
     </>
   );
 }
@@ -190,17 +141,6 @@ export default function SparkHome() {
 // --- SUB-COMPONENTS for SparkHome ---
 
 const Hero = ({ onScanClick }: { onScanClick: () => void }) => {
-    const [time, setTime] = useState('');
-
-    useEffect(() => {
-        const timer = setInterval(() => {
-            const now = new Date();
-            const options = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
-            setTime(now.toLocaleTimeString('en-US', options).replace(' ', '') + ' IST');
-        }, 1000);
-        return () => clearInterval(timer);
-    }, []);
-
     return (
         <section className="relative hero-bg pt-16 pb-10 md:pt-20 md:pb-14">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -211,8 +151,6 @@ const Hero = ({ onScanClick }: { onScanClick: () => void }) => {
                     </div>
                     <span>|</span>
                     <span>INDIA</span>
-                    <span>|</span>
-                    <span id="live-time">{time}</span>
                 </div>
                 <h1 className="font-tech text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tighter mt-4 text-glow">
                     Neural Commerce Matrix
@@ -252,7 +190,7 @@ const SearchBar = () => (
         <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
-                placeholder="Search deals, businesses, or rewards..."
+                placeholder="Search deals, businesses, or investments..."
                 className="pl-10 bg-black/20 border-purple-500/30 focus:border-purple-500/60 font-tech text-sm text-white placeholder:text-gray-500 rounded-lg"
             />
         </div>
@@ -285,14 +223,14 @@ const Tabs = ({ activeTab, setActiveTab }: { activeTab: Tab, setActiveTab: (tab:
   </div>
 );
 
-const DealsContent = ({ trendingDeals, localDeals }: { trendingDeals: DealWithBusiness[], localDeals: DealWithBusiness[] }) => (
+const DealsContent = ({ trendingDeals, localDeals, onViewDeal }: { trendingDeals: DealWithBusiness[], localDeals: DealWithBusiness[], onViewDeal: (dealId: string) => void }) => (
   <div className="space-y-8">
-    <DealsSection title="🔥 Viral Deals" deals={trendingDeals} badgeText={`${trendingDeals.length} Active`} icon={TrendingUp} />
-    <DealsSection title="📍 Local Marketplace" deals={localDeals} icon={Heart} />
+    <DealsSection title="🔥 Viral Deals" deals={trendingDeals} badgeText={`${trendingDeals.length} Active`} icon={TrendingUp} onViewDeal={onViewDeal} />
+    <DealsSection title="📍 Local Marketplace" deals={localDeals} icon={Heart} onViewDeal={onViewDeal} />
   </div>
 );
 
-const DealsSection = ({ title, deals, badgeText, icon: Icon }: { title: string; deals: DealWithBusiness[]; badgeText?: string, icon: React.ElementType }) => (
+const DealsSection = ({ title, deals, badgeText, icon: Icon, onViewDeal }: { title: string; deals: DealWithBusiness[]; badgeText?: string, icon: React.ElementType, onViewDeal: (dealId: string) => void }) => (
   <div>
     <div className="flex items-center gap-3 mb-4">
       <Icon className="w-5 h-5 text-purple-400" />
@@ -310,33 +248,18 @@ const DealsSection = ({ title, deals, badgeText, icon: Icon }: { title: string; 
           business={business}
           deal={deal}
           onShare={() => alert(`Sharing deal ID: ${deal.id}`)}
+          onViewDeal={onViewDeal}
         />
       ))}
     </div>
   </div>
 );
 
-const RewardsContent = () => (
-  <div className="space-y-8">
-    <div className="flex items-center justify-between">
-        <h2 className="text-xl font-tech font-bold text-white text-glow flex items-center gap-3"><Gift className="w-5 h-5 text-purple-400" /> Your Reward Tokens</h2>
-        <Link to="/discover-rewards">
-          <Button variant="outline" size="sm" className="text-gray-300 border-gray-700 hover:bg-gray-800 hover:text-white">
-              <Plus className="w-4 h-4 mr-1" />
-              Discover More
-          </Button>
-        </Link>
-    </div>
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {mockRewardTokens.map((token) => (
-        <RewardToken key={token.symbol} token={token} onClick={() => console.log("Token clicked:", token.symbol)} />
-      ))}
-    </div>
-    <CommunityInvestmentPool />
-  </div>
+const InvestContent = ({ onLearnMoreClick }: { onLearnMoreClick: () => void }) => (
+  <CommunityInvestmentPool onLearnMoreClick={onLearnMoreClick} />
 );
 
-const CommunityInvestmentPool = () => (
+const CommunityInvestmentPool = ({ onLearnMoreClick }: { onLearnMoreClick: () => void }) => (
     <div className="card-border-glow rounded-lg p-8 animation-none">
         <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="flex-shrink-0">
@@ -360,31 +283,8 @@ const CommunityInvestmentPool = () => (
             </div>
         </div>
         <div className="mt-6 flex flex-col sm:flex-row justify-center gap-4">
-            <Button className="glow-button font-semibold text-white px-8 py-3 rounded-lg w-full sm:w-auto" onClick={() => alert('Invest Now functionality to be implemented.')}>Invest Now</Button>
-            <Button className="bg-gray-800/50 hover:bg-gray-700/50 transition-colors duration-300 text-gray-300 font-semibold px-8 py-3 rounded-lg w-full sm:w-auto" onClick={() => alert('Learn More functionality to be implemented.')}>Learn More</Button>
+            <Link to="/invest" className="glow-button font-semibold text-white px-8 py-3 rounded-lg w-full sm:w-auto">Invest Now</Link>
+            <Button className="bg-gray-800/50 hover:bg-gray-700/50 transition-colors duration-300 text-gray-300 font-semibold px-8 py-3 rounded-lg w-full sm:w-auto" onClick={onLearnMoreClick}>Learn More</Button>
         </div>
-    </div>
-);
-
-
-const CommunityContent = () => (
-  <div className="space-y-8">
-    <CommunityLeaderboard entries={mockLeaderboard} title="Community Champions" />
-    <div className="text-center">
-        <h2 className="text-xl font-tech font-bold text-white text-glow flex items-center justify-center gap-3"><Users className="w-5 h-5 text-purple-400" /> Network Statistics</h2>
-    </div>
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <CommunityStat value={mockCommunityStats.totalUsers.toLocaleString()} label="Active Users" />
-        <CommunityStat value={mockCommunityStats.activeBusinesses} label="Local Businesses" className="text-purple-400" />
-        <CommunityStat value={`₹${(mockCommunityStats.monthlyVolume / 1000000).toFixed(1)}M`} label="Monthly Volume" className="text-purple-400" />
-        <CommunityStat value={mockCommunityStats.loansActive} label="Active Loans" />
-    </div>
-  </div>
-);
-
-const CommunityStat = ({ value, label, className }: { value: string | number; label: string; className?: string }) => (
-    <div className={cn("card-border-glow p-4 rounded-lg text-center animation-none", className)}>
-        <div className={cn("text-2xl font-tech font-bold text-white mb-1", className)}>{value}</div>
-        <div className="text-xs text-gray-400 font-tech uppercase">{label}</div>
     </div>
 );

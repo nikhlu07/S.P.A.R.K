@@ -9,6 +9,7 @@ import ExploreViralDeals from "./pages/ExploreViralDeals";
 import Notifications from "./pages/Notifications";
 import DealDetails from "./pages/DealDetails";
 import DiscoverRewards from "./pages/DiscoverRewards";
+import Invest from "./pages/Invest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,8 +27,12 @@ const App = () => (
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/deal/:dealId" element={<DealDetails />} />
             <Route path="/discover-rewards" element={<DiscoverRewards />} />
+            <Route path="/invest" element={<Invest />} />
           </Route>
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          {/*<Route path="/login" element={<LoginPage />} />*/}
+          {/*<Route path="/register" element={<RegisterPage />} />*/}
+          {/*<Route path="/profile" element={<ProfilePage />} />*/}
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL \"*\" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
