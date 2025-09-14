@@ -11,9 +11,12 @@ import DealDetails from "./pages/DealDetails";
 import DiscoverRewards from "./pages/DiscoverRewards";
 import Invest from "./pages/Invest";
 import NotFound from "./pages/NotFound";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import ProfilePage from "./pages/ProfilePage";
+import BusinessLayout from "@/components/layout/BusinessLayout";
+import BusinessDashboard from "./pages/business/BusinessDashboard";
+import BusinessLoginPage from "./pages/business/BusinessLoginPage";
+import BusinessRegisterPage from "./pages/business/BusinessRegisterPage";
+import BusinessWelcomePage from "./pages/business/BusinessWelcomePage";
+import BusinessVerificationPage from "./pages/business/BusinessVerificationPage";
 
 const queryClient = new QueryClient();
 
@@ -24,18 +27,24 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+
           <Route element={<MainLayout />}>
             <Route path="/" element={<SparkHome />} />
-            <Route path="/explore-viral-deals" element={<ExploreViralDeals />} />
+            <Route path="/explore-viral-deals" element={<ExploreViralDeals />} />8
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/deal/:dealId" element={<DealDetails />} />
             <Route path="/discover-rewards" element={<DiscoverRewards />} />
             <Route path="/invest" element={<Invest />} />
           </Route>
-          {/*<Route path="/login" element={<LoginPage />} />*/}
-          {/*<Route path="/register" element={<RegisterPage />} />*/}
-          {/*<Route path="/profile" element={<ProfilePage />} />*/}
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL \"*\" ROUTE */}
+
+          <Route path="/business" element={<BusinessLayout />}>
+            <Route index element={<BusinessWelcomePage />} />
+            <Route path="login" element={<BusinessLoginPage />} />
+            <Route path="register" element={<BusinessRegisterPage />} />
+            <Route path="dashboard" element={<BusinessDashboard />} />
+            <Route path="verify" element={<BusinessVerificationPage />} />
+          </Route>
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

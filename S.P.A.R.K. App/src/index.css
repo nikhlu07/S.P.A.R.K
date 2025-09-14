@@ -1,4 +1,6 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Share+Tech+Mono&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -66,6 +68,14 @@
 }
 
 @layer components {
+    .font-tech {
+        font-family: 'Share Tech Mono', monospace;
+    }
+
+    .text-glow {
+        text-shadow: 0 0 8px var(--glow-color-soft), 0 0 24px var(--glow-color-faint);
+    }
+
     .stars-container {
         position: fixed;
         top: 0;
@@ -191,7 +201,30 @@
         animation: pulse-green 2s infinite;
     }
 
-    .animation-none {
-        animation: none;
+    .fade-in-section {
+        opacity: 0;
+        animation: fadeIn 1s ease-out forwards;
     }
+}
+
+@layer utilities {
+    @keyframes moveGrid {
+        from { background-position: 0 0; }
+        to { background-position: 3rem 3rem; }
+    }
+    @keyframes shoot {
+        0% { transform: translateX(0) translateY(0) rotate(45deg); opacity: 1; }
+        100% { transform: translateX(100vw) translateY(-100vh) rotate(45deg); opacity: 0; }
+    }
+    @keyframes scan {
+        0% { background-position: 0 0; }
+        100% { background-position: 0 100vh; }
+    }
+    @keyframes rotate { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+    @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+    @keyframes pulse-green { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px var(--glow-color-faint); } 50% { box-shadow: 0 0 40px var(--glow-color-soft); } }
+    @keyframes typing { from { width: 0 } to { width: 100% } }
+    @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--glow-color); } }
 }
