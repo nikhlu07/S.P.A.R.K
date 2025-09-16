@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import {
   Search,
@@ -9,6 +9,8 @@ import {
   TrendingUp,
   Repeat,
   QrCode,
+  Wallet,
+  ExternalLink,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -20,19 +22,36 @@ import { DealCard } from "@/components/DealCard";
 import { DealDialog } from "@/components/DealDialog";
 import { LearnMoreDialog } from "@/components/LearnMoreDialog";
 import type { AppContext } from "@/components/layout/MainLayout";
+import { useWeb3 } from "@/contexts/Web3Context";
+import { lineService } from "@/services/lineService";
 
-import {
-  mockBusinesses,
-  mockDeals,
-  mockUserStats,
-  mockCommunityStats,
-} from "@/data/mockData";
 import TransactionsPage from "./TransactionsPage";
 
 // --- TYPES ---
 type Tab = 'deals' | 'invest' | 'transactions';
-type Business = (typeof mockBusinesses)[0];
-type Deal = (typeof mockDeals)[0];
+type Business = {
+  id: string;
+  name: string;
+  category: string;
+  location: string;
+  owner: string;
+  isVerified: boolean;
+  trustScore: number;
+  totalVolume: number;
+  createdAt: Date;
+  metadataURI: string;
+};
+type Deal = {
+  id: number;
+  title: string;
+  description: string;
+  maxCoupons: number;
+  claimedCoupons: number;
+  discountPercent: number;
+  creator: string;
+  isActive: boolean;
+  createdAt: Date;
+};
 type DealWithBusiness = {
   deal: Deal;
   business: Business;
@@ -47,12 +66,22 @@ const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
 
 // --- HELPER COMPONENTS ---
 
-const UserStats = ({ walletBalance }: { walletBalance?: number }) => (
+const UserStats = ({ 
+  usdtBalance, 
+  businessesSupported = 0,
+  couponsCollected = 0,
+  communityRank = 1
+}: { 
+  usdtBalance?: string;
+  businessesSupported?: number;
+  couponsCollected?: number;
+  communityRank?: number;
+}) => (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard value={mockUserStats.businessesSupported} label="Business Nodes" />
-        <StatCard value={(walletBalance ?? mockUserStats.tokensEarned).toFixed(2)} label="Tokens Mined" className="text-purple-400" />
-        <StatCard value={mockUserStats.nftCouponsCollected} label="NFT Assets" className="text-purple-400" />
-        <StatCard value={`#${mockUserStats.communityRank}`} label="Neural Rank" />
+        <StatCard value={businessesSupported} label="Business Nodes" />
+        <StatCard value={usdtBalance ? parseFloat(usdtBalance).toFixed(2) : "0.00"} label="USDT Balance" className="text-purple-400" />
+        <StatCard value={couponsCollected} label="Coupons Collected" className="text-purple-400" />
+        <StatCard value={`#${communityRank}`} label="Community Rank" />
     </div>
 );
 
@@ -74,6 +103,23 @@ export default function SparkHome() {
     connectWallet,
     isLoggedIn,
   } = useOutletContext<AppContext>();
+  
+  const {
+    isConnected,
+    account,
+    balance,
+    usdtBalance,
+    lineProfile,
+    isLineConnected,
+    businesses,
+    campaigns,
+    poolInfo,
+    connectWallet: connectWeb3Wallet,
+    connectLine,
+    isLoading,
+    error
+  } = useWeb3();
+  
   const [activeTab, setActiveTab] = useState<Tab>('deals');
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -84,25 +130,64 @@ export default function SparkHome() {
     setIsDialogOpen(true);
   };
 
+  const handleConnectWallet = async () => {
+    try {
+      await connectWeb3Wallet();
+    } catch (err) {
+      console.error('Failed to connect wallet:', err);
+    }
+  };
+
+  const handleConnectLine = async () => {
+    try {
+      await connectLine();
+    } catch (err) {
+      console.error('Failed to connect LINE:', err);
+    }
+  };
+
+  const handleShareCoupon = async (campaign: Deal) => {
+    try {
+      await lineService.shareCoupon(campaign);
+    } catch (err) {
+      console.error('Failed to share coupon:', err);
+    }
+  };
+
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setSelectedDealId(null);
   };
 
-  const dealsWithBusinesses: DealWithBusiness[] = mockDeals.map(deal => ({
-    deal,
-    business: mockBusinesses.find(b => b.id === deal.businessId)!,
-  })).filter((item): item is DealWithBusiness => item.business != null);
+  // Combine campaigns with businesses to create deals
+  const dealsWithBusinesses: DealWithBusiness[] = campaigns.map(campaign => {
+    const business = businesses.find(b => b.owner.toLowerCase() === campaign.creator.toLowerCase());
+    return {
+      deal: campaign,
+      business: business || {
+        id: campaign.creator,
+        name: "Unknown Business",
+        category: "General",
+        location: "Unknown",
+        owner: campaign.creator,
+        isVerified: false,
+        trustScore: 0,
+        totalVolume: 0,
+        createdAt: new Date(),
+        metadataURI: ""
+      }
+    };
+  });
 
-  const trendingDeals = dealsWithBusinesses.filter(({ deal }) => deal.trending);
-  const localDeals = dealsWithBusinesses.filter(({ deal }) => !deal.trending);
+  const trendingDeals = dealsWithBusinesses.filter(({ deal }) => deal.claimedCoupons > 0);
+  const localDeals = dealsWithBusinesses.filter(({ deal }) => deal.claimedCoupons === 0);
 
   const renderContent = () => {
     switch (activeTab) {
       case 'deals':
         return <DealsContent trendingDeals={trendingDeals} localDeals={localDeals} onViewDeal={handleViewDeal} />;
       case 'invest':
-        return <InvestContent onLearnMoreClick={() => setIsLearnMoreOpen(true)} />;
+        return <InvestContent poolInfo={poolInfo} onLearnMoreClick={() => setIsLearnMoreOpen(true)} />;
       case 'transactions':
         return <TransactionsPage />;
       default:
@@ -113,18 +198,48 @@ export default function SparkHome() {
   return (
     <>
       <Hero onScanClick={() => setShowPaymentScanner(true)} />
-      {isLoggedIn && walletAddress ? (
+      {isConnected && account ? (
         <WalletCard
-          balance={walletBalance}
-          usdBalance={walletUsdBalance}
-          address={walletAddress}
+          balance={balance}
+          usdBalance={usdtBalance}
+          address={account}
           networkName="Kaia Kairos Testnet"
           currencySymbol="KAIA"
         />
       ) : (
-        <ConnectWallet onConnect={connectWallet} />
+        <div className="space-y-4">
+          <div className="flex gap-4 justify-center">
+            <Button 
+              onClick={handleConnectWallet}
+              disabled={isLoading}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Wallet className="w-4 h-4 mr-2" />
+              Connect Wallet
+            </Button>
+            <Button 
+              onClick={handleConnectLine}
+              disabled={isLoading}
+              variant="outline"
+              className="border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Connect LINE
+            </Button>
+          </div>
+          {error && (
+            <div className="text-red-500 text-center text-sm">
+              {error}
+            </div>
+          )}
+        </div>
       )}
-      <UserStats walletBalance={isLoggedIn ? walletBalance : undefined} />
+      <UserStats 
+        usdtBalance={usdtBalance}
+        businessesSupported={businesses.length}
+        couponsCollected={campaigns.reduce((sum, c) => sum + c.claimedCoupons, 0)}
+        communityRank={1}
+      />
       <SearchBar />
       <Tabs activeTab={activeTab} setActiveTab={setActiveTab} />
       {renderContent()}
@@ -255,11 +370,23 @@ const DealsSection = ({ title, deals, badgeText, icon: Icon, onViewDeal }: { tit
   </div>
 );
 
-const InvestContent = ({ onLearnMoreClick }: { onLearnMoreClick: () => void }) => (
-  <CommunityInvestmentPool onLearnMoreClick={onLearnMoreClick} />
+const InvestContent = ({ 
+  poolInfo, 
+  onLearnMoreClick 
+}: { 
+  poolInfo: any | null;
+  onLearnMoreClick: () => void;
+}) => (
+  <CommunityInvestmentPool poolInfo={poolInfo} onLearnMoreClick={onLearnMoreClick} />
 );
 
-const CommunityInvestmentPool = ({ onLearnMoreClick }: { onLearnMoreClick: () => void }) => (
+const CommunityInvestmentPool = ({ 
+  poolInfo, 
+  onLearnMoreClick 
+}: { 
+  poolInfo: any | null;
+  onLearnMoreClick: () => void;
+}) => (
     <div className="card-border-glow rounded-lg p-8 animation-none">
         <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="flex-shrink-0">
@@ -268,17 +395,21 @@ const CommunityInvestmentPool = ({ onLearnMoreClick }: { onLearnMoreClick: () =>
                 </div>
             </div>
             <div className="flex-1 text-center md:text-left">
-                <h3 className="font-tech text-2xl font-bold text-white text-glow">Community Quantum Yield</h3>
+                <h3 className="font-tech text-2xl font-bold text-white text-glow">Community Investment Pool</h3>
                 <p className="mt-2 text-gray-400">Invest in local businesses and earn a share of their success. Your capital directly fuels the local economy.</p>
             </div>
             <div className="flex-shrink-0 grid grid-cols-2 gap-6 text-center">
                 <div>
-                    <div className="text-3xl font-bold text-white">₹{mockCommunityStats.communityPool.toLocaleString()}</div>
-                    <div className="text-sm text-purple-400 font-tech">Total Value Locked</div>
+                    <div className="text-3xl font-bold text-white">
+                      {poolInfo ? `${poolInfo.totalInvested.toFixed(2)} USDT` : "0.00 USDT"}
+                    </div>
+                    <div className="text-sm text-purple-400 font-tech">Total Invested</div>
                 </div>
                 <div>
-                    <div className="text-3xl font-bold text-white">{mockCommunityStats.averageYield}%</div>
-                    <div className="text-sm text-purple-400 font-tech">Average APY</div>
+                    <div className="text-3xl font-bold text-white">
+                      {poolInfo ? poolInfo.totalInvestors : 0}
+                    </div>
+                    <div className="text-sm text-purple-400 font-tech">Total Investors</div>
                 </div>
             </div>
         </div>
