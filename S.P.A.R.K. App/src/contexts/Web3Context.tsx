@@ -67,8 +67,13 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       setIsConnected(true);
       
       // Get USDT balance
-      const usdtBal = await web3Service.getUSDTBalance();
-      setUsdtBalance(usdtBal);
+      try {
+        const usdtBal = await web3Service.getUSDTBalance();
+        setUsdtBalance(usdtBal);
+      } catch (err) {
+        console.warn('Failed to get USDT balance:', err);
+        setUsdtBalance('0');
+      }
       
       // Load blockchain data
       await loadBlockchainData();
@@ -92,8 +97,8 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
       setIsLineConnected(true);
       
     } catch (err: any) {
-      setError(err.message);
-      console.error('Failed to connect LINE:', err);
+      console.warn('LINE integration not available:', err.message);
+      // Don't set error for LINE, just log it as LINE is optional
     } finally {
       setIsLoading(false);
     }
@@ -114,16 +119,31 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
   const loadBlockchainData = async () => {
     try {
       // Load businesses
-      const businessData = await web3Service.getBusinesses();
-      setBusinesses(businessData);
+      try {
+        const businessData = await web3Service.getBusinesses();
+        setBusinesses(businessData);
+      } catch (err) {
+        console.warn('Failed to load businesses:', err);
+        setBusinesses([]);
+      }
       
       // Load campaigns
-      const campaignData = await web3Service.getCampaigns();
-      setCampaigns(campaignData);
+      try {
+        const campaignData = await web3Service.getCampaigns();
+        setCampaigns(campaignData);
+      } catch (err) {
+        console.warn('Failed to load campaigns:', err);
+        setCampaigns([]);
+      }
       
       // Load pool info
-      const poolData = await web3Service.getPoolInfo();
-      setPoolInfo(poolData);
+      try {
+        const poolData = await web3Service.getPoolInfo();
+        setPoolInfo(poolData);
+      } catch (err) {
+        console.warn('Failed to load pool info:', err);
+        setPoolInfo(null);
+      }
       
     } catch (err: any) {
       console.error('Failed to load blockchain data:', err);

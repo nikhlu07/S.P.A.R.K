@@ -15,7 +15,8 @@ class LineService {
           try {
             // Initialize LIFF
             this.liff = (window as any).liff;
-            await this.liff.init({ liffId: process.env.REACT_APP_LIFF_ID || 'your-liff-id' });
+            const liffId = import.meta.env.VITE_LIFF_ID || 'your-liff-id';
+            await this.liff.init({ liffId });
             this.isInitialized = true;
             resolve(true);
           } catch (error) {

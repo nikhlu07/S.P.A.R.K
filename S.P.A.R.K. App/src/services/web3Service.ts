@@ -84,17 +84,22 @@ class Web3Service {
       throw new Error('Wallet not connected');
     }
     
-    // USDT has 6 decimals
-    const usdtAbi = [
-      "function balanceOf(address owner) view returns (uint256)",
-      "function decimals() view returns (uint8)"
-    ];
-    
-    const usdtContract = await this.getContract('USDT_TOKEN', usdtAbi);
-    const balance = await usdtContract.balanceOf(await this.signer.getAddress());
-    const decimals = await usdtContract.decimals();
-    
-    return ethers.formatUnits(balance, decimals);
+    try {
+      // USDT has 6 decimals
+      const usdtAbi = [
+        "function balanceOf(address owner) view returns (uint256)",
+        "function decimals() view returns (uint8)"
+      ];
+      
+      const usdtContract = await this.getContract('USDT_TOKEN', usdtAbi);
+      const balance = await usdtContract.balanceOf(await this.signer.getAddress());
+      const decimals = await usdtContract.decimals();
+      
+      return ethers.formatUnits(balance, decimals);
+    } catch (error) {
+      console.warn('Failed to get USDT balance:', error);
+      return '0'; // Return 0 if USDT balance can't be fetched
+    }
   }
 
   // Business functions
