@@ -9,6 +9,7 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { Share2, Clock, Tag, Building, X } from 'lucide-react';
+import { useWeb3 } from '@/contexts/Web3Context';
 import { mockDeals, mockBusinesses } from '@/data/mockData';
 
 // Define types for deal and business to avoid using 'any'
@@ -35,10 +36,40 @@ interface DealDialogProps {
 }
 
 export const DealDialog = ({ dealId, isOpen, onClose }: DealDialogProps) => {
+  const { isConnected, campaigns, businesses } = useWeb3();
+  
   if (!dealId) return null;
 
-  const deal: Deal | undefined = mockDeals.find(d => d.id === dealId);
-  const business: Business | undefined = deal ? mockBusinesses.find(b => b.id === deal.businessId) : undefined;
+  // Try to find real campaign data first, fallback to mock data
+  let deal: Deal | undefined;
+  let business: Business | undefined;
+
+  if (isConnected && campaigns.length > 0) {
+    const campaign = campaigns.find(c => c.campaignId.toString() === dealId);
+    if (campaign) {
+      const businessData = businesses.find(b => b.businessAddress === campaign.businessOwner);
+      deal = {
+        id: campaign.campaignId.toString(),
+        businessId: campaign.businessOwner,
+        title: campaign.name,
+        description: campaign.description,
+        category: businessData?.category || 'General',
+        endDate: new Date(campaign.endTime * 1000).toISOString()
+      };
+      business = businessData ? {
+        id: businessData.businessAddress,
+        name: businessData.name,
+        location: businessData.location,
+        owner: businessData.owner
+      } : undefined;
+    }
+  }
+
+  // Fallback to mock data if no real data found
+  if (!deal || !business) {
+    deal = mockDeals.find(d => d.id === dealId);
+    business = deal ? mockBusinesses.find(b => b.id === deal.businessId) : undefined;
+  }
 
   if (!deal || !business) {
     return null; // Or a fallback UI

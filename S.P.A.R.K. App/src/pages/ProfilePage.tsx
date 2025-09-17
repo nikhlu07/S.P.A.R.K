@@ -3,12 +3,22 @@ import { useOutletContext, Navigate } from 'react-router-dom';
 import type { AppContext } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { mockDeals } from '@/data/mockData';
 import { NftCard } from '@/components/NftCard';
 import { CouponCard } from '@/components/CouponCard';
+import { useWeb3 } from '@/contexts/Web3Context';
 
 const ProfilePage: React.FC = () => {
   const { isLoggedIn, walletAddress, walletBalance, walletUsdBalance, logout } = useOutletContext<AppContext>();
+  const { 
+    isConnected, 
+    account, 
+    balance, 
+    usdtBalance, 
+    campaigns, 
+    businesses,
+    lineProfile,
+    isLineConnected 
+  } = useWeb3();
   const [username, setUsername] = useState('Neural-Agent-007');
   const [isEditing, setIsEditing] = useState(false);
 
@@ -42,9 +52,15 @@ const ProfilePage: React.FC = () => {
             <p className="mt-2 text-gray-400 truncate">{walletAddress}</p>
             <div className="mt-4 flex items-center justify-center md:justify-start gap-6 font-tech">
               <div>
-                <div className="text-2xl font-bold text-white">{walletBalance.toFixed(4)} KAIA</div>
-                <div className="text-sm text-purple-400">≈ ${walletUsdBalance.toFixed(2)}</div>
+                <div className="text-2xl font-bold text-white">{isConnected ? parseFloat(balance || '0').toFixed(4) : walletBalance.toFixed(4)} KAIA</div>
+                <div className="text-sm text-purple-400">≈ ${isConnected ? parseFloat(usdtBalance || '0').toFixed(2) : walletUsdBalance.toFixed(2)}</div>
               </div>
+              {isConnected && (
+                <div>
+                  <div className="text-lg font-bold text-green-400">{parseFloat(usdtBalance || '0').toFixed(2)} USDT</div>
+                  <div className="text-sm text-gray-400">Blockchain Balance</div>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex-shrink-0">
@@ -54,18 +70,73 @@ const ProfilePage: React.FC = () => {
       </div>
 
       <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-tech font-bold text-white text-glow mb-4">My NFT Coupons</h2>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {mockDeals.filter(deal => deal.nftCoupon).map(coupon => <CouponCard key={coupon.id} coupon={coupon} />)}
+        {/* Real Campaign Data */}
+        {isConnected && campaigns.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-tech font-bold text-white text-glow mb-4">My Active Campaigns</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {campaigns.map(campaign => (
+                <div key={campaign.campaignId} className="card-border-glow p-4 rounded-lg">
+                  <h3 className="font-bold text-white mb-2">{campaign.name}</h3>
+                  <p className="text-gray-400 text-sm mb-3">{campaign.description}</p>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-purple-400">Claimed: {campaign.claimedCoupons}</span>
+                    <span className="text-green-400">{campaign.discountPercentage}% off</span>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">
+                    {campaign.isActive ? 'Active' : 'Inactive'} • {campaign.isViral ? 'Viral' : 'Standard'}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-        <div>
-          <h2 className="text-2xl font-tech font-bold text-white text-glow mb-4">My NFT Collection</h2>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {mockDeals.filter(deal => !deal.nftCoupon).map(nft => <NftCard key={nft.id} nft={nft} />)}
+        )}
+
+        {/* Business Support */}
+        {isConnected && businesses.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-tech font-bold text-white text-glow mb-4">Businesses I Support</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {businesses.map(business => (
+                <div key={business.businessAddress} className="card-border-glow p-4 rounded-lg">
+                  <h3 className="font-bold text-white mb-2">{business.name}</h3>
+                  <p className="text-gray-400 text-sm mb-3">{business.category}</p>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-purple-400">Trust: {business.trustScore}/100</span>
+                    <span className="text-green-400">Volume: {business.totalVolume} USDT</span>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">
+                    {business.isVerified ? 'Verified' : 'Unverified'} • {business.location}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* LINE Profile */}
+        {isLineConnected && lineProfile && (
+          <div>
+            <h2 className="text-2xl font-tech font-bold text-white text-glow mb-4">LINE Profile</h2>
+            <div className="card-border-glow p-4 rounded-lg">
+              <div className="flex items-center gap-4">
+                <img src={lineProfile.pictureUrl} alt="LINE Profile" className="w-16 h-16 rounded-full" />
+                <div>
+                  <h3 className="font-bold text-white">{lineProfile.displayName}</h3>
+                  <p className="text-gray-400 text-sm">Connected to LINE</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Fallback for when not connected */}
+        {!isConnected && (
+          <div className="text-center py-8">
+            <p className="text-gray-400 mb-4">Connect your wallet to see your blockchain data</p>
+            <Button className="glow-button">Connect Wallet</Button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -26,6 +26,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { LoanApplicationDialog } from '@/components/LoanApplicationDialog';
+import { useWeb3 } from '@/contexts/Web3Context';
 
 // Interface for data objects
 interface Loan {
@@ -70,6 +71,16 @@ const LiveClock = () => {
 }
 
 const BusinessDashboard = () => {
+  const { 
+    isConnected, 
+    account, 
+    balance, 
+    usdtBalance, 
+    campaigns, 
+    businesses,
+    poolInfo 
+  } = useWeb3();
+  
   const [isVerified, setIsVerified] = useState(false);
   const [isLoanApplicationOpen, setIsLoanApplicationOpen] = useState(false);
   const [isCouponDialogOpen, setIsCouponDialogOpen] = useState(false);
@@ -88,18 +99,28 @@ const BusinessDashboard = () => {
   ]);
   const [listings, setListings] = useState<Listing[]>([]);
 
-  // Mock data for user and business
+  // Real blockchain data for user and business
   const userData = {
     name: 'Nikhil',
     email: 'nikhil@elykid.com',
-    sparkId: 'SPK-USER-N1K2H3',
+    sparkId: `SPK-USER-${account?.slice(-8) || 'N1K2H3'}`,
+    walletAddress: account || 'Not Connected',
+    balance: balance || '0',
+    usdtBalance: usdtBalance || '0'
   };
 
+  // Get the first business or use default
+  const currentBusiness = businesses.length > 0 ? businesses[0] : null;
   const businessData = {
-    name: 'Elykid Private Limited',
-    type: 'Technology',
+    name: currentBusiness?.name || 'Elykid Private Limited',
+    type: currentBusiness?.category || 'Technology',
+    address: currentBusiness?.businessAddress || 'Not Registered',
+    trustScore: currentBusiness?.trustScore || 0,
+    totalVolume: currentBusiness?.totalVolume || 0,
+    isVerified: currentBusiness?.isVerified || false,
+    location: currentBusiness?.location || 'Lucknow, India',
     get verificationStatus() {
-      return isVerified ? 'Verified' : 'Not Verified';
+      return this.isVerified ? 'Verified' : 'Not Verified';
     }
   };
 
@@ -268,6 +289,9 @@ const BusinessDashboard = () => {
                             <li><strong>Name:</strong> {userData.name}</li>
                             <li><strong>Email:</strong> {userData.email}</li>
                             <li className="font-tech"><strong>SPARK ID:</strong> {userData.sparkId}</li>
+                            <li><strong>Wallet:</strong> {userData.walletAddress}</li>
+                            <li><strong>KAIA Balance:</strong> {parseFloat(userData.balance).toFixed(4)}</li>
+                            <li><strong>USDT Balance:</strong> {parseFloat(userData.usdtBalance).toFixed(2)}</li>
                         </ul>
                     </div>
                     <div className="card-border-glow p-8 rounded-lg">
@@ -278,8 +302,11 @@ const BusinessDashboard = () => {
                         <ul className="mt-4 space-y-2 text-gray-400">
                             <li><strong>Name:</strong> {businessData.name}</li>
                             <li><strong>Type:</strong> {businessData.type}</li>
+                            <li><strong>Location:</strong> {businessData.location}</li>
+                            <li><strong>Trust Score:</strong> {businessData.trustScore}/100</li>
+                            <li><strong>Total Volume:</strong> {businessData.totalVolume} USDT</li>
                             <li><strong>Verification Status:</strong> 
-                                <span className={isVerified ? 'text-green-400' : 'text-yellow-400'}>
+                                <span className={businessData.isVerified ? 'text-green-400' : 'text-yellow-400'}>
                                     {businessData.verificationStatus}
                                 </span>
                             </li>
@@ -352,29 +379,58 @@ const BusinessDashboard = () => {
                             </DialogTrigger>
                         </div>
                         <div className="card-border-glow p-8 rounded-lg md:col-span-2">
-                            <h3 className="font-tech text-xl font-bold text-white mb-4">Existing Coupons</h3>
-                            <Table>
-                              <TableHeader>
-                                <TableRow className="border-gray-800 hover:bg-transparent">
-                                  <TableHead className="text-gray-400">Title</TableHead>
-                                  <TableHead className="text-gray-400">Code</TableHead>
-                                  <TableHead className="text-gray-400">Discount</TableHead>
-                                  <TableHead className="text-gray-400">Status</TableHead>
-                                  <TableHead className="text-gray-400">Expiry</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {coupons.map((coupon) => (
-                                    <TableRow key={coupon.code} className="border-gray-800 hover:bg-purple-500/5">
-                                      <TableCell className="text-white">{coupon.title}</TableCell>
-                                      <TableCell className="text-white font-tech">{coupon.code}</TableCell>
-                                      <TableCell className="text-white">{coupon.discount}</TableCell>
-                                      <TableCell className={coupon.status === 'Active' ? 'text-green-400' : 'text-yellow-400'}>{coupon.status}</TableCell>
-                                      <TableCell className="text-white">{coupon.expiry}</TableCell>
+                            <h3 className="font-tech text-xl font-bold text-white mb-4">
+                                {isConnected && campaigns.length > 0 ? 'Active Campaigns' : 'Existing Coupons'}
+                            </h3>
+                            {isConnected && campaigns.length > 0 ? (
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow className="border-gray-800 hover:bg-transparent">
+                                      <TableHead className="text-gray-400">Campaign</TableHead>
+                                      <TableHead className="text-gray-400">Type</TableHead>
+                                      <TableHead className="text-gray-400">Discount</TableHead>
+                                      <TableHead className="text-gray-400">Claimed</TableHead>
+                                      <TableHead className="text-gray-400">Status</TableHead>
                                     </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {campaigns.map((campaign) => (
+                                        <TableRow key={campaign.campaignId} className="border-gray-800 hover:bg-purple-500/5">
+                                          <TableCell className="text-white">{campaign.name}</TableCell>
+                                          <TableCell className="text-white">{campaign.isViral ? 'Viral' : 'Standard'}</TableCell>
+                                          <TableCell className="text-white">{campaign.discountPercentage}%</TableCell>
+                                          <TableCell className="text-white">{campaign.claimedCoupons}/{campaign.totalCoupons}</TableCell>
+                                          <TableCell className={campaign.isActive ? 'text-green-400' : 'text-yellow-400'}>
+                                            {campaign.isActive ? 'Active' : 'Inactive'}
+                                          </TableCell>
+                                        </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                            ) : (
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow className="border-gray-800 hover:bg-transparent">
+                                      <TableHead className="text-gray-400">Title</TableHead>
+                                      <TableHead className="text-gray-400">Code</TableHead>
+                                      <TableHead className="text-gray-400">Discount</TableHead>
+                                      <TableHead className="text-gray-400">Status</TableHead>
+                                      <TableHead className="text-gray-400">Expiry</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {coupons.map((coupon) => (
+                                        <TableRow key={coupon.code} className="border-gray-800 hover:bg-purple-500/5">
+                                          <TableCell className="text-white">{coupon.title}</TableCell>
+                                          <TableCell className="text-white font-tech">{coupon.code}</TableCell>
+                                          <TableCell className="text-white">{coupon.discount}</TableCell>
+                                          <TableCell className={coupon.status === 'Active' ? 'text-green-400' : 'text-yellow-400'}>{coupon.status}</TableCell>
+                                          <TableCell className="text-white">{coupon.expiry}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                            )}
                         </div>
                     </div>
                     <DialogContent className="bg-black/80 backdrop-blur-md border border-purple-500/50 text-white">

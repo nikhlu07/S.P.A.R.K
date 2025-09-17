@@ -3,6 +3,7 @@ import { QrCode, Camera, X, Zap, Check, Heart, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useWeb3 } from '@/contexts/Web3Context';
 import { mockTransactions } from "@/data/mockData";
 
 interface PaymentScannerProps {
@@ -11,11 +12,25 @@ interface PaymentScannerProps {
 }
 
 export function PaymentScanner({ isOpen, onClose }: PaymentScannerProps) {
+  const { isConnected, businesses, usdtBalance } = useWeb3();
   const [step, setStep] = useState<'scanning' | 'business' | 'payment' | 'success'>('scanning');
   const [amount, setAmount] = useState(35);
   
-  // Mock business data that would be scanned
-  const scannedBusiness = {
+  // Use real business data if available, fallback to mock
+  const scannedBusiness = isConnected && businesses.length > 0 ? {
+    name: businesses[0].name,
+    image: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400",
+    rating: 4.8,
+    friendsLove: 15,
+    category: businesses[0].category,
+    address: businesses[0].businessAddress,
+    trustScore: businesses[0].trustScore,
+    offers: {
+      discount: "20% OFF",
+      description: "Free samosa with chai purchase",
+      tokensEarned: 7
+    }
+  } : {
     name: "Sharma Tea Stall",
     image: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400",
     rating: 4.8,
@@ -148,6 +163,20 @@ export function PaymentScanner({ isOpen, onClose }: PaymentScannerProps) {
               <div className="flex items-center justify-center">
                 <span className="text-4xl font-bold text-primary">₹{amount}</span>
               </div>
+              {isConnected && (
+                <div className="mt-4 p-3 bg-gray-800/50 rounded-lg">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Your USDT Balance:</span>
+                    <span className="text-green-400 font-bold">{parseFloat(usdtBalance || '0').toFixed(2)} USDT</span>
+                  </div>
+                  {scannedBusiness.address && (
+                    <div className="flex justify-between text-sm mt-1">
+                      <span className="text-gray-400">Business Address:</span>
+                      <span className="text-blue-400 font-mono text-xs">{scannedBusiness.address.slice(0, 8)}...{scannedBusiness.address.slice(-6)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <Button variant="electric" size="lg" className="w-full" onClick={handlePayment}>

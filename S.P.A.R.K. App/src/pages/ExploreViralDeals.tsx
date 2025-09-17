@@ -2,20 +2,53 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { DealDialog } from '@/components/DealDialog';
+import { useWeb3 } from '@/contexts/Web3Context';
 import { mockDeals, mockBusinesses } from '@/data/mockData';
 
 const ExploreViralDeals = () => {
+  const { 
+    isConnected, 
+    campaigns, 
+    businesses 
+  } = useWeb3();
+  
   const [deals, setDeals] = useState<any[]>([]);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
-    const dealsWithBusiness = mockDeals.map(deal => {
-      const business = mockBusinesses.find(b => b.id === deal.businessId);
-      return { ...deal, store: business ? business.name : 'Unknown Store' };
-    });
-    setDeals(dealsWithBusiness);
-  }, []);
+    if (isConnected && campaigns.length > 0) {
+      // Use real campaign data
+      const realDeals = campaigns.map(campaign => {
+        const business = businesses.find(b => b.businessAddress === campaign.businessOwner);
+        return {
+          id: campaign.campaignId.toString(),
+          title: campaign.name,
+          description: campaign.description,
+          store: business ? business.name : 'Unknown Store',
+          category: business ? business.category : 'General',
+          image: campaign.imageURI || '/api/placeholder/300/200',
+          discount: `${campaign.discountPercentage}% OFF`,
+          originalPrice: campaign.minPurchaseAmount,
+          discountedPrice: campaign.maxPurchaseAmount,
+          nftCoupon: campaign.isViral,
+          viral: campaign.isViral,
+          claimed: campaign.claimedCoupons,
+          total: campaign.totalCoupons,
+          isActive: campaign.isActive,
+          businessId: campaign.businessOwner
+        };
+      });
+      setDeals(realDeals);
+    } else {
+      // Fallback to mock data
+      const dealsWithBusiness = mockDeals.map(deal => {
+        const business = mockBusinesses.find(b => b.id === deal.businessId);
+        return { ...deal, store: business ? business.name : 'Unknown Store' };
+      });
+      setDeals(dealsWithBusiness);
+    }
+  }, [isConnected, campaigns, businesses]);
 
   const handleViewDeal = (dealId: string) => {
     setSelectedDealId(dealId);
@@ -48,11 +81,39 @@ const ExploreViralDeals = () => {
             </CardHeader>
             <CardContent className="flex-grow">
               <img src={deal.image} alt={deal.title} className="rounded-lg mb-4 w-full h-48 object-cover" />
-              <p className="text-gray-300">{deal.description}</p>
+              <p className="text-gray-300 mb-4">{deal.description}</p>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <span className="text-2xl font-bold text-green-400">{deal.discount}</span>
+                  <div className="text-sm text-gray-400">
+                    <span className="line-through">${deal.originalPrice}</span>
+                    <span className="ml-2 text-white">${deal.discountedPrice}</span>
+                  </div>
+                </div>
+                {deal.nftCoupon && (
+                  <div className="text-xs font-bold bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full px-3 py-1">
+                    NFT COUPON
+                  </div>
+                )}
+              </div>
+              {isConnected && (
+                <div className="mb-4 p-3 bg-gray-800/50 rounded-lg">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Claimed:</span>
+                    <span className="text-white">{deal.claimed}/{deal.total}</span>
+                  </div>
+                  <div className="flex justify-between text-sm mt-1">
+                    <span className="text-gray-400">Status:</span>
+                    <span className={deal.isActive ? 'text-green-400' : 'text-red-400'}>
+                      {deal.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                </div>
+              )}
             </CardContent>
             <CardFooter className="flex justify-between items-center">
               <div className="text-sm text-gray-400 font-tech">
-                Expires: {new Date(deal.endDate).toLocaleDateString()}
+                {isConnected ? `Campaign ID: ${deal.id}` : `Expires: ${new Date(deal.endDate).toLocaleDateString()}`}
               </div>
               <Button variant="cyber" onClick={() => handleViewDeal(deal.id)}>View Deal</Button>
             </CardFooter>
