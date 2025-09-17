@@ -29,7 +29,8 @@ const Header = ({ onScanClick, isLoggedIn, logout }: { onScanClick: () => void; 
 
   const navLinks = [
     { to: '/', label: 'Home' },
-    { to: '/explore-viral-deals', label: 'Explore Deals' },
+    { to: '/explore-viral-deals', label: '🔥 Viral Deals' },
+    { to: '/local-marketplace', label: '🏪 Marketplace' },
     { to: '/notifications', label: 'Notifications' },
     { to: '/discover-rewards', label: 'Discover Rewards' },
     // ...(isLoggedIn ? [{ to: '/profile', label: 'Profile' }] : [{ to: '/login', label: 'Login/Register' }]),

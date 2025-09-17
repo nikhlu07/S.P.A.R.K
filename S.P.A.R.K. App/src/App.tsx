@@ -8,6 +8,7 @@ import { Web3Provider } from "./contexts/Web3Context";
 import MainLayout from "@/components/layout/MainLayout";
 import SparkHome from "./pages/SparkHome";
 import ExploreViralDeals from "./pages/ExploreViralDeals";
+import LocalMarketplace from "./pages/LocalMarketplace";
 import Notifications from "./pages/Notifications";
 import DealDetails from "./pages/DealDetails";
 import DiscoverRewards from "./pages/DiscoverRewards";
@@ -35,6 +36,7 @@ const App = () => (
           <Route element={<MainLayout />}>
             <Route path="/" element={<SparkHome />} />
             <Route path="/explore-viral-deals" element={<ExploreViralDeals />} />
+            <Route path="/local-marketplace" element={<LocalMarketplace />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/deal/:dealId" element={<DealDetails />} />
             <Route path="/discover-rewards" element={<DiscoverRewards />} />
