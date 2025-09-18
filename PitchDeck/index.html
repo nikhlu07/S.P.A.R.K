@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>S.P.A.R.K. - A New Economic Reality</title>
+    <link rel="icon" href="logo.svg" type="image/svg+xml">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -228,6 +229,79 @@
             border-radius: 9999px;
             border: 1px solid var(--glow-color-faint);
         }
+
+        /* Mobile Responsiveness */
+        @media screen and (max-width: 767px) {
+            .slide {
+                padding: 2rem 1.5rem; /* Reduce padding on mobile */
+            }
+
+            /* Adjust typography to be smaller on mobile */
+            .text-6xl, .md\:text-8xl {
+                font-size: 3rem !important; /* 48px */
+                line-height: 1;
+            }
+            .text-4xl, .md\:text-5xl {
+                font-size: 2rem !important; /* 32px */
+                line-height: 1.2;
+            }
+            .text-2xl, .md\:text-2xl {
+                font-size: 1.25rem !important; /* 20px */
+            }
+             .text-xl {
+                font-size: 1.125rem !important; /* 18px */
+            }
+             .text-lg {
+                font-size: 1rem !important; /* 16px */
+            }
+            .text-sm {
+                font-size: 0.875rem !important; /* 14px */
+            }
+
+            /* Force grids into a single column */
+            .grid {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .gap-8 {
+                gap: 1.5rem !important;
+            }
+
+            .gap-12 {
+                gap: 2rem !important;
+            }
+
+            .mb-12 {
+                margin-bottom: 2.5rem !important;
+            }
+
+            .mb-8 {
+                margin-bottom: 1.5rem !important;
+            }
+            
+            .w-40 {
+                width: 8rem !important;
+            }
+            .h-40 {
+                height: 8rem !important;
+            }
+             .w-32 {
+                width: 6rem !important;
+            }
+            .h-32 {
+                height: 6rem !important;
+            }
+
+            #deck-controls {
+                bottom: 1rem;
+                padding: 0.25rem 0.5rem;
+                gap: 0.5rem;
+            }
+            #deck-controls button {
+                padding: 0.75rem;
+            }
+        }
+
     </style>
 </head>
 <body class="antialiased">
@@ -518,4 +592,3 @@
     </script>
 </body>
 </html>
-
