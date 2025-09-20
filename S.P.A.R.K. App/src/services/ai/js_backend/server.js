@@ -75,14 +75,14 @@ app.post('/chat', async (req, res) => {
             azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
             azureOpenAIApiInstanceName: process.env.AZURE_OPENAI_API_INSTANCE_NAME,
             azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_API_DEPLOYMENT_NAME,
-            azureOpenAIApiVersion: "2023-07-01-preview",
+            azureOpenAIApiVersion: "2025-01-01-preview",
         });
 
         const embeddings = new AzureOpenAIEmbeddings({
             azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
             azureOpenAIApiInstanceName: process.env.AZURE_OPENAI_API_INSTANCE_NAME,
             azureOpenAIApiDeploymentName: process.env.AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME,
-            azureOpenAIApiVersion: "2023-07-01-preview",
+            azureOpenAIApiVersion: "2025-01-01-preview",
         });
 
         const vectorStore = await MemoryVectorStore.fromTexts(documents, {}, embeddings);
