@@ -26,7 +26,8 @@ import BusinessVerifyPage from "./pages/business/BusinessVerifyPage";
 import PaymentScanPage from "./pages/PaymentScanPage";
 import Community from "./pages/Community";
 import LocalExchangeListing from "./pages/business/LocalExchangeListing";
-import LineDemoPage from "./pages/LineDemo";
+import { LineDemoPage } from "./pages/LineDemo";
+import AnalyticsDemo from "./pages/AnalyticsDemo";
 // Removed NetworkStats import as feature is deprecated
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ const App = () => (
                   <Route path="/pay" element={<PaymentScanPage />} />
                   <Route path="/community" element={<Community />} />
                   <Route path="/line-demo" element={<LineDemoPage />} />
+                  <Route path="/analytics" element={<AnalyticsDemo />} />
                   {/* Removed Network Stats route */}
                 </Route>
 
