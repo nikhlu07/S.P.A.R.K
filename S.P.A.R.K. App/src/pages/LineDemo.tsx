@@ -14,7 +14,7 @@ import {
   Smartphone
 } from 'lucide-react';
 
-const LineDemoPage: React.FC = () => {
+export const LineDemoPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('demo');
   const [transactionHistory, setTransactionHistory] = useState<string[]>([]);
 
