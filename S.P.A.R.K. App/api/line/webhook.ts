@@ -3,6 +3,27 @@ export const config = { runtime: 'nodejs18.x', memory: 1024 };
 
 // Vercel-style serverless function for LINE Messaging API webhook
 // Handles webhook events with a self-contained service implementation
+// Safe JSON responder to support both Vercel res.status().json() and Node http
+function sendJson(res: any, status: number, data: any) {
+  try {
+    if (typeof res?.status === 'function' && typeof res?.json === 'function') {
+      return res.status(status).json(data);
+    }
+    if (typeof res?.setHeader === 'function') {
+      res.setHeader('Content-Type', 'application/json');
+    }
+    if (typeof res?.writeHead === 'function') {
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify(data));
+    }
+    return res?.end ? res.end(JSON.stringify(data)) : undefined;
+  } catch (e) {
+    try {
+      return res?.end ? res.end(JSON.stringify({ error: 'Failed to send response', detail: String(e) })) : undefined;
+    } catch { /* ignore */ }
+  }
+}
+
 class SimpleLineWebhookService {
   private baseURL = 'https://api.line.me/v2/bot';
 
@@ -77,17 +98,18 @@ export default async function handler(req: any, res: any) {
   const requestId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   const hasProcess = typeof process !== 'undefined';
   try {
-    const method = req.method;
-    // Summarize headers safely (no values)
-    const headerKeys = Object.keys(req.headers || {});
-    console.log(`[LINE_WEBHOOK][${requestId}] request start`, { method, headerKeys, url: req.url, query: req.query });
+    const method = req?.method;
+    const headerKeys = Object.keys(req?.headers || {});
+    const url = (() => { try { return req?.url; } catch { return undefined; } })();
+    const query = (() => { try { return req?.query; } catch { return undefined; } })();
+    console.log(`[LINE_WEBHOOK][${requestId}] request start`, { method, headerKeys, url, query });
 
     if (method === 'GET') {
       const hasAccessToken = hasProcess ? !!process.env?.LINE_CHANNEL_ACCESS_TOKEN : false;
       const hasChannelSecret = hasProcess ? !!process.env?.LINE_CHANNEL_SECRET : false;
       const vercelRegion = hasProcess ? process.env?.VERCEL_REGION : undefined;
       console.log(`[LINE_WEBHOOK][${requestId}] health check`, { hasAccessToken, hasChannelSecret, vercelRegion });
-      return res.status(200).json({
+      return sendJson(res, 200, {
         status: 'LINE webhook is running',
         requestId,
         timestamp: new Date().toISOString(),
@@ -102,15 +124,15 @@ export default async function handler(req: any, res: any) {
 
     if (method !== 'POST') {
       console.warn(`[LINE_WEBHOOK][${requestId}] method not allowed`, { method });
-      return res.status(405).json({ error: 'Method Not Allowed', requestId });
+      return sendJson(res, 405, { error: 'Method Not Allowed', requestId });
     }
 
     console.log(`[LINE_WEBHOOK][${requestId}] webhook received`);
 
-    const signature = (req.headers['x-line-signature'] as string) || '';
+    const signature = (req?.headers?.['x-line-signature'] as string) || '';
     console.log(`[LINE_WEBHOOK][${requestId}] signature presence`, { hasSignature: !!signature });
 
-    let rawBody = req.body;
+    let rawBody = req?.body;
     let bodyObj: any;
     try {
       const isString = typeof rawBody === 'string';
@@ -120,14 +142,14 @@ export default async function handler(req: any, res: any) {
     } catch (parseError) {
       const preview = typeof rawBody === 'string' ? rawBody.slice(0, 500) : '[non-string body]';
       console.error(`[LINE_WEBHOOK][${requestId}] failed to parse JSON body`, parseError, { preview });
-      return res.status(400).json({ error: 'Invalid JSON body', requestId });
+      return sendJson(res, 400, { error: 'Invalid JSON body', requestId });
     }
 
     const channelSecret = (hasProcess ? process.env?.LINE_CHANNEL_SECRET : undefined) || '';
     const verified = service.verifySignature(signature, JSON.stringify(bodyObj || {}), channelSecret);
     if (!verified) {
       console.warn(`[LINE_WEBHOOK][${requestId}] invalid signature`);
-      return res.status(401).json({ error: 'Invalid signature', requestId });
+      return sendJson(res, 401, { error: 'Invalid signature', requestId });
     }
 
     const events = Array.isArray(bodyObj?.events) ? bodyObj.events : [];
@@ -138,10 +160,10 @@ export default async function handler(req: any, res: any) {
     }
 
     console.log(`[LINE_WEBHOOK][${requestId}] success`);
-    return res.status(200).json({ message: 'OK', processed: events.length, requestId });
+    return sendJson(res, 200, { message: 'OK', processed: events.length, requestId });
   } catch (error) {
     console.error(`[LINE_WEBHOOK][${requestId}] unhandled error`, error);
-    return res.status(500).json({
+    return sendJson(res, 500, {
       error: 'Internal server error',
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
