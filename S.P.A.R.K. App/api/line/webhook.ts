@@ -1,7 +1,7 @@
 // Vercel-style serverless function for LINE Messaging API webhook
 // Handles webhook events and uses existing LineWebhookService logic
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { LineWebhookService } from '../../src/services/lineWebhookService.ts';
+import { LineWebhookService } from '../../src/services/lineWebhookService';
 
 const service = LineWebhookService.getInstance();
 

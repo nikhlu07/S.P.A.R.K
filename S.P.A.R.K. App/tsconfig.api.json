@@ -4,7 +4,7 @@
     "lib": ["ES2023"],
     "module": "commonjs",
     "moduleResolution": "node",
-    "allowImportingTsExtensions": true,
+    "allowImportingTsExtensions": false,
     "noEmit": true,
     "skipLibCheck": true,
     "isolatedModules": true,
