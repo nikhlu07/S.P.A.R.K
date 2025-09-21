@@ -4,11 +4,17 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Simple webhook service implementation for Vercel
 class SimpleLineWebhookService {
-  private channelAccessToken: string;
+  // Remove eager env read to avoid crashing in non-Node runtimes
   private baseURL = 'https://api.line.me/v2/bot';
 
-  constructor() {
-    this.channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN || '';
+  // Safe env accessor that works even if process is undefined (e.g., edge runtimes)
+  private getEnv(key: string): string | undefined {
+    try {
+      // typeof process is safe even if process is not defined
+      return typeof process !== 'undefined' ? (process.env?.[key] as string | undefined) : undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   // Verify LINE signature for webhook security
@@ -20,21 +26,23 @@ class SimpleLineWebhookService {
 
   // Handle webhook event
   async handleWebhookEvent(event: any): Promise<void> {
-    console.log('Processing LINE webhook event:', event.type);
+    console.log('Processing LINE webhook event:', event?.type);
     
-    if (event.type === 'message' && event.message.type === 'text') {
-      const userId = event.source.userId;
-      const messageText = event.message.text;
-      
-      // Simple echo response
-      await this.sendTextMessage(userId, `Echo: ${messageText}`);
+    if (event?.type === 'message' && event.message?.type === 'text') {
+      const userId = event.source?.userId;
+      const messageText = event.message?.text ?? '';
+      if (userId) {
+        // Simple echo response
+        await this.sendTextMessage(userId, `Echo: ${messageText}`);
+      }
     }
   }
 
   // Send text message to LINE user
   async sendTextMessage(userId: string, text: string): Promise<boolean> {
     try {
-      if (!this.channelAccessToken) {
+      const channelAccessToken = this.getEnv('LINE_CHANNEL_ACCESS_TOKEN') ?? '';
+      if (!channelAccessToken) {
         console.log('No LINE_CHANNEL_ACCESS_TOKEN found, skipping message send');
         return false;
       }
@@ -43,7 +51,7 @@ class SimpleLineWebhookService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.channelAccessToken}`
+          'Authorization': `Bearer ${channelAccessToken}`
         },
         body: JSON.stringify({
           to: userId,
@@ -68,12 +76,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // Basic health check (useful for verifying deployment)
     if (req.method === 'GET') {
+      const hasProcess = typeof process !== 'undefined';
+      const hasAccessToken = hasProcess ? !!process.env?.LINE_CHANNEL_ACCESS_TOKEN : false;
+      const hasChannelSecret = hasProcess ? !!process.env?.LINE_CHANNEL_SECRET : false;
       return res.status(200).json({ 
         status: 'LINE webhook is running',
         timestamp: new Date().toISOString(),
         environment: {
-          hasAccessToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN,
-          hasChannelSecret: !!process.env.LINE_CHANNEL_SECRET
+          runtime: hasProcess ? 'node' : 'edge_like',
+          hasAccessToken,
+          hasChannelSecret
         }
       });
     }
@@ -89,7 +101,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     const signature = (req.headers['x-line-signature'] as string) || '';
-    const channelSecret = process.env.LINE_CHANNEL_SECRET || '';
 
     // Handle both string and object body formats
     let bodyObj: any;
@@ -99,6 +110,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error('Failed to parse request body:', parseError);
       return res.status(400).json({ error: 'Invalid JSON body' });
     }
+
+    const channelSecret = (typeof process !== 'undefined' ? process.env?.LINE_CHANNEL_SECRET : undefined) || '';
 
     // NOTE: Our verifySignature currently returns true (demo), but we keep the call for future hardening
     const verified = service.verifySignature(signature, JSON.stringify(bodyObj || {}), channelSecret);
