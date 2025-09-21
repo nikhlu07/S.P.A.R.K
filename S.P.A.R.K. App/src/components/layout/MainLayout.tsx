@@ -3,6 +3,8 @@ import { Link, NavLink, Outlet } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Bell, QrCode, Menu, X } from 'lucide-react';
 import { PaymentScanner } from '@/components/PaymentScanner';
+import { LineHeader } from '@/components/LineHeader';
+import { BusinessNavButton } from '@/components/BusinessNavButton';
 import { cn } from '@/lib/utils';
 import { ethers } from 'ethers';
 
@@ -33,6 +35,7 @@ const Header = ({ onScanClick, isLoggedIn, logout }: { onScanClick: () => void; 
     { to: '/local-marketplace', label: '🏪 Marketplace' },
     { to: '/notifications', label: 'Notifications' },
     { to: '/discover-rewards', label: 'Discover Rewards' },
+    // Removed Network Stats from navigation as requested
     // ...(isLoggedIn ? [{ to: '/profile', label: 'Profile' }] : [{ to: '/login', label: 'Login/Register' }]),
   ];
 
@@ -42,7 +45,7 @@ const Header = ({ onScanClick, isLoggedIn, logout }: { onScanClick: () => void; 
             <div className="flex items-center justify-between h-16">
                 <div className="flex-shrink-0">
                     <Link to="/" className="flex items-center space-x-2">
-                        <img src="/logo.png" alt="S.P.A.R.K. Logo" width="40"/>
+                        <img src="/logo.svg" alt="S.P.A.R.K. Logo" width="40"/>
                         <span className="font-tech text-2xl font-bold tracking-wider text-white text-glow">S.P.A.R.K.</span>
                     </Link>
                 </div>
@@ -54,21 +57,22 @@ const Header = ({ onScanClick, isLoggedIn, logout }: { onScanClick: () => void; 
                       className={({ isActive }) =>
                         cn(
                           "font-tech text-sm uppercase tracking-wider transition-colors",
-                          isActive ? "text-purple-400 text-glow" : "text-gray-400 hover:text-white"
+                          isActive ? "text-purple-400 text-glow" : "text-white hover:text-purple-300"
                         )
                       }
                     >
                       {link.label}
                     </NavLink>
                   ))}
-                  {isLoggedIn && <Button onClick={logout} variant="ghost" className="font-tech text-sm uppercase tracking-wider text-gray-400 hover:text-white">Logout</Button>}
+                  {isLoggedIn && <Button onClick={logout} variant="ghost" className="font-tech text-sm uppercase tracking-wider text-white hover:text-purple-300">Logout</Button>}
                 </nav>
                 <div className="flex items-center gap-2">
-                    <div className="hidden md:flex items-center gap-2 font-tech text-sm text-gray-400">
+                    <div className="hidden md:flex items-center gap-2 font-tech text-sm text-white">
                       <span className="status-light"></span>
                       <span>{time}</span>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={onScanClick} className="text-gray-300 hover:text-purple-400">
+                    <BusinessNavButton />
+                    <Button variant="ghost" size="icon" onClick={onScanClick} className="text-white hover:text-purple-400">
                         <QrCode className="w-6 h-6" />
                     </Button>
                     <div className="md:hidden">
@@ -213,16 +217,18 @@ const MainLayout = () => {
       <div className="scanline-overlay"></div>
 
       <div className="relative z-10">
+        <LineHeader />
         <Header onScanClick={() => setShowPaymentScanner(true)} isLoggedIn={isLoggedIn} logout={logout} />
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
           <Outlet context={{ setShowPaymentScanner, walletAddress, walletBalance, walletUsdBalance, isLoggedIn, connectWallet, logout }} />
         </main>
         <FloatingScanButton onClick={() => setShowPaymentScanner(true)} />
       </div>
-      <PaymentScanner
-        isOpen={showPaymentScanner}
-        onClose={() => setShowPaymentScanner(false)}
-      />
+      {showPaymentScanner && (
+        <PaymentScanner
+          onClose={() => setShowPaymentScanner(false)}
+        />
+      )}
     </div>
   );
 };

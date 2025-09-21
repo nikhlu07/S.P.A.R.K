@@ -64,9 +64,12 @@ export function CommunityLeaderboard({ entries, title, className }: CommunityLea
               {/* Avatar */}
               <div className="flex-shrink-0">
                 <img
-                  src={entry.avatar}
+                  src={entry.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100"}
                   alt={entry.name}
                   className="w-10 h-10 rounded-full object-cover border-2 border-border"
+                  onError={(e) => {
+                    e.currentTarget.src = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100";
+                  }}
                 />
               </div>
 

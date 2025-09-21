@@ -1,7 +1,11 @@
-import { Heart, MapPin, Users, Zap, Gift } from "lucide-react";
+import { Heart, MapPin, Users, Zap, Gift, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { LineShareButton } from "@/components/LineShareButton";
+import { BlockchainPayment } from "@/components/BlockchainPayment";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { getImageProps, getDealImage } from "@/utils/imageUtils";
 
 interface DealCardProps {
   business: {
@@ -12,6 +16,7 @@ interface DealCardProps {
     distance: string;
     rating: number;
     friendsLove: number;
+    wallet_address?: string;
   };
   deal: {
     id: string;
@@ -21,6 +26,8 @@ interface DealCardProps {
     endDate: string;
     nftCoupon?: boolean;
     trending?: boolean;
+    original_price?: number;
+    discounted_price?: number;
   };
   onShare?: () => void;
   onViewDeal: (dealId: string) => void;
@@ -28,6 +35,19 @@ interface DealCardProps {
 }
 
 export function DealCard({ business, deal, onShare, onViewDeal, className }: DealCardProps) {
+  const [showPayment, setShowPayment] = useState(false);
+
+  const handlePaymentSuccess = (txHash: string) => {
+    console.log('Payment successful:', txHash);
+    setShowPayment(false);
+    // You can add more success handling here
+  };
+
+  const handlePaymentError = (error: string) => {
+    console.error('Payment failed:', error);
+    // You can add more error handling here
+  };
+
   return (
     <div className={cn(
       "relative overflow-hidden rounded-lg bg-gradient-card shadow-card border border-border/50",
@@ -55,11 +75,22 @@ export function DealCard({ business, deal, onShare, onViewDeal, className }: Dea
       )}
 
       {/* Business Image */}
-      <div className="relative h-40 overflow-hidden">
+      <div className="relative h-40 overflow-hidden" style={{ width: '100%', height: '160px' }}>
         <img 
-          src={business.image} 
-          alt={business.name}
-          className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+          {...getImageProps(
+            getDealImage(deal.title, business.category, business.image),
+            business.name,
+            "w-full h-full transition-transform duration-300 hover:scale-110"
+          )}
+          style={{ 
+            width: '100%', 
+            height: '100%', 
+            maxWidth: '100%', 
+            maxHeight: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+            display: 'block'
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         
@@ -121,24 +152,32 @@ export function DealCard({ business, deal, onShare, onViewDeal, className }: Dea
 
         {/* Action Buttons */}
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onShare}
-            className="flex-1 border-primary/20 hover:border-primary/40 hover:bg-primary/5"
-          >
-            <Heart className="w-3 h-3 mr-1" />
-            Share
-          </Button>
-          <Button 
-            variant="default" 
-            size="sm" 
-            onClick={() => onViewDeal(deal.id)}
-            className="flex-1 bg-gradient-primary hover:shadow-glow transition-all duration-300"
-          >
-            <Zap className="w-3 h-3 mr-1" />
-            Claim Now
-          </Button>
+          <LineShareButton 
+            deal={deal}
+            size="sm"
+            className="flex-1"
+          />
+          {business.wallet_address && deal.discounted_price ? (
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={() => setShowPayment(true)}
+              className="flex-1 bg-gradient-primary hover:shadow-glow transition-all duration-300"
+            >
+              <Coins className="w-3 h-3 mr-1" />
+              Pay Now
+            </Button>
+          ) : (
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={() => onViewDeal(deal.id)}
+              className="flex-1 bg-gradient-primary hover:shadow-glow transition-all duration-300"
+            >
+              <Zap className="w-3 h-3 mr-1" />
+              Claim Now
+            </Button>
+          )}
         </div>
       </div>
 
@@ -148,6 +187,37 @@ export function DealCard({ business, deal, onShare, onViewDeal, className }: Dea
       {/*    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-spark-shine" />*/}
       {/*  </div>*/}
       {/*)}*/}
+
+      {/* Blockchain Payment Modal */}
+      {showPayment && business.wallet_address && deal.discounted_price && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-gray-900 rounded-lg max-w-[95vw] sm:max-w-md w-full max-h-[95vh] overflow-y-auto">
+            <div className="p-4 border-b border-gray-700">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white">Blockchain Payment</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPayment(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  ×
+                </Button>
+              </div>
+            </div>
+            <div className="p-4">
+              <BlockchainPayment
+                dealId={deal.id}
+                businessAddress={business.wallet_address}
+                dealTitle={deal.title}
+                amount={deal.discounted_price.toString()}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

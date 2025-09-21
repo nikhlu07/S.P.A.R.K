@@ -48,6 +48,29 @@
     color: #E0E0E0;
     overflow-x: hidden;
   }
+  
+  /* Responsive modal fixes */
+  [role="dialog"] {
+    max-width: 95vw !important;
+    max-height: 95vh !important;
+    margin: 1rem !important;
+  }
+  
+  /* Fix for dialog content */
+  [data-radix-dialog-content] {
+    max-width: 95vw !important;
+    max-height: 95vh !important;
+    overflow-y: auto !important;
+  }
+  
+  /* Mobile-first responsive design */
+  @media (max-width: 640px) {
+    [role="dialog"],
+    [data-radix-dialog-content] {
+      max-width: 98vw !important;
+      margin: 0.5rem !important;
+    }
+  }
 
   body::before {
     content: '';

@@ -8,7 +8,7 @@ const BusinessWelcomePage = () => {
           <div className="flex items-center justify-start h-16">
             <div className="flex-shrink-0">
               <Link to="/" className="flex items-center space-x-2">
-                <img src="/logo.png" alt="S.P.A.R.K. Logo" width="40" />
+                <img src="/logo.svg" alt="S.P.A.R.K. Logo" width="40" />
                 <span className="font-tech text-2xl font-bold tracking-wider text-white text-glow">S.P.A.R.K.</span>
               </Link>
             </div>

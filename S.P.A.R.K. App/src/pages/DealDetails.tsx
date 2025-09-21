@@ -30,7 +30,14 @@ const DealDetails = () => {
         </Button>
         <Card className="overflow-hidden bg-gray-900/50 card-border-glow animation-none">
             <CardHeader>
-                <img src={`https://via.placeholder.com/800x400/581845/FFFFFF?text=${deal.title}`} alt={deal.title} className="rounded-t-lg w-full h-64 object-cover" />
+                <img 
+                  src={deal.image || (deal.title.toLowerCase().includes('pizza') ? "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop" : deal.title.toLowerCase().includes('coffee') ? "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop" : deal.title.toLowerCase().includes('electronics') ? "https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?w=400&h=300&fit=crop" : "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop")} 
+                  alt={deal.title} 
+                  className="rounded-t-lg w-full h-64 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = deal.title.toLowerCase().includes('pizza') ? "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop" : deal.title.toLowerCase().includes('coffee') ? "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop" : deal.title.toLowerCase().includes('electronics') ? "https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?w=400&h=300&fit=crop" : "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop";
+                  }}
+                />
             </CardHeader>
             <CardContent className="p-6">
                 <CardTitle className="text-3xl font-bold text-white text-glow mb-2">{deal.title}</CardTitle>

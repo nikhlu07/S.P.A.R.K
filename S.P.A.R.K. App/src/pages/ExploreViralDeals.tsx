@@ -206,7 +206,14 @@ const ExploreViralDeals = () => {
               </div>
             </CardHeader>
             <CardContent className="flex-grow">
-              <img src={deal.image} alt={deal.title} className="rounded-lg mb-4 w-full h-48 object-cover" />
+              <img 
+                src={deal.image || (deal.title.toLowerCase().includes('pizza') ? "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop" : deal.title.toLowerCase().includes('coffee') ? "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop" : deal.title.toLowerCase().includes('electronics') ? "https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?w=400&h=300&fit=crop" : "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop")} 
+                alt={deal.title} 
+                className="rounded-lg mb-4 w-full h-48 object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = deal.title.toLowerCase().includes('pizza') ? "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop" : deal.title.toLowerCase().includes('coffee') ? "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop" : deal.title.toLowerCase().includes('electronics') ? "https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?w=400&h=300&fit=crop" : "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop";
+                }}
+              />
               <p className="text-gray-300 mb-4">{deal.description}</p>
               <div className="flex items-center justify-between mb-4">
                 <div>

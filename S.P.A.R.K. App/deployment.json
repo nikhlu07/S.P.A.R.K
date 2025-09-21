@@ -1,0 +1,13 @@
+{
+  "network": "kaia-testnet",
+  "chainId": 1001,
+  "deployer": "0x2E2fA3250799DcCe940bAb300B81eB19A1706C44",
+  "usdtToken": "0x55d398326f99059fF775485246999027B3197955",
+  "contracts": {
+    "TrustMatrixScorer": "0xc9dE8087935FF4fa4BF7d00B4240CA76Ec3d6A03",
+    "KaiaSparkFactory": "0xDA5452Ff45879fBc7dB100D055Da5FB54aFC0c77",
+    "SocialMarketingAI": "0x223C620a173cc129EF026999e2473AfeDa4018b8",
+    "QuantumLendingPool": "0x465Ef21e14177e5f0560A527061987B2f0c79041"
+  },
+  "timestamp": "2025-09-21T06:00:17.426Z"
+}

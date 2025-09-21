@@ -37,7 +37,14 @@ const ProfilePage: React.FC = () => {
       <div className="card-border-glow p-8 rounded-lg animation-none">
         <div className="flex flex-col md:flex-row items-center gap-6">
           <div className="flex-shrink-0">
-            <img src={`https://avatars.dicebear.com/api/jdenticon/${walletAddress}.svg`} alt="User Avatar" className="w-24 h-24 rounded-full bg-gray-800 border-2 border-purple-700" />
+            <img 
+              src={`https://avatars.dicebear.com/api/jdenticon/${walletAddress}.svg`} 
+              alt="User Avatar" 
+              className="w-24 h-24 rounded-full bg-gray-800 border-2 border-purple-700"
+              onError={(e) => {
+                e.currentTarget.src = "/placeholder-avatar.svg";
+              }}
+            />
           </div>
           <div className="flex-1 text-center md:text-left">
             {isEditing ? (
@@ -120,7 +127,12 @@ const ProfilePage: React.FC = () => {
             <h2 className="text-2xl font-tech font-bold text-white text-glow mb-4">LINE Profile</h2>
             <div className="card-border-glow p-4 rounded-lg">
               <div className="flex items-center gap-4">
-                <img src={lineProfile.pictureUrl} alt="LINE Profile" className="w-16 h-16 rounded-full" />
+                <img 
+                  src={lineProfile.pictureUrl} 
+                  alt="LINE Profile" 
+                  className="w-16 h-16 rounded-full object-cover object-center"
+                  style={{ maxWidth: '100%', maxHeight: '100%' }}
+                />
                 <div>
                   <h3 className="font-bold text-white">{lineProfile.displayName}</h3>
                   <p className="text-gray-400 text-sm">Connected to LINE</p>

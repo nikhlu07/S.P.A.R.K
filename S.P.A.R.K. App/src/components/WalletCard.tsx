@@ -5,7 +5,7 @@ import { useState } from "react";
 
 interface WalletCardProps {
   balance: number;
-  usdBalance: number;
+  usdBalance: number | string;
   address: string;
   networkName: string;
   currencySymbol: string;
@@ -73,7 +73,7 @@ export function WalletCard({ balance, usdBalance, address, networkName, currency
         <div className="mb-4">
           <div className="text-3xl font-bold mb-1">{formatBalance(balance)}</div>
           <div className="text-primary-foreground/70 text-sm">
-            {showBalance ? `$${parseFloat(usdBalance || '0').toFixed(2)} USD` : "$••••"}
+            {showBalance ? `$${typeof usdBalance === 'string' ? parseFloat(usdBalance).toFixed(2) : usdBalance.toFixed(2)} USD` : "$••••"}
           </div>
         </div>
 

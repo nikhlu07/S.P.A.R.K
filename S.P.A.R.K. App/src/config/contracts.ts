@@ -1,4 +1,6 @@
 // SPARK Protocol Contract Addresses on Kaia Testnet
+import QuantumLendingPoolABI from '../../artifacts/contracts/QuantumLendingPool.sol/QuantumLendingPool.json';
+
 export const CONTRACT_ADDRESSES = {
   // Deployed on Kaia Kairos Testnet
   TRUST_MATRIX_SCORER: "0x88f89504F32A1439B44e7aaad3AAAd6dA5BBc13e",
@@ -21,7 +23,14 @@ export const NETWORK_CONFIG = {
   },
 };
 
+// Alternative RPC endpoints for fallback
+export const ALTERNATIVE_RPC_URLS = [
+  "https://public-en-kairos.node.kaia.io",
+  "https://rpc-kairos.kaia.io",
+  "https://kairos-rpc.kaia.io"
+];
+
 // Contract ABIs (we'll add these as we integrate)
 export const CONTRACT_ABIS = {
-  // Will be populated with actual ABIs
+  QUANTUM_LENDING_POOL: QuantumLendingPoolABI.abi,
 };

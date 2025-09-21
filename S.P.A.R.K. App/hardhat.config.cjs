@@ -1,7 +1,7 @@
 require("@nomicfoundation/hardhat-ethers");
 require("@nomicfoundation/hardhat-chai-matchers");
+require("@nomiclabs/hardhat-etherscan");
 require("dotenv").config();
-
 
 const config = {
   solidity: {
@@ -33,24 +33,24 @@ const config = {
   },
   etherscan: {
     apiKey: {
-      kaiaTestnet: "your-kaia-api-key",
-      kaiaMainnet: "your-kaia-api-key",
+      kairos: "unnecessary",
+      kaia: "unnecessary",
     },
     customChains: [
       {
-        network: "kaiaTestnet",
-        chainId: 0x3e9,
+        network: "kairos",
+        chainId: 1001,
         urls: {
-          apiURL: "https://kairos.kaiaexplorer.io/api",
-          browserURL: "https://kairos.kaiaexplorer.io/",
+          apiURL: "https://kairos-api.kaiascan.io/hardhat-verify",
+          browserURL: "https://kairos.kaiascan.io",
         },
       },
       {
-        network: "kaiaMainnet",
-        chainId: 0x1e4a,
+        network: "kaia",
+        chainId: 8217,
         urls: {
-          apiURL: "https://kaiaexplorer.io/api",
-          browserURL: "https://kaiaexplorer.io/",
+          apiURL: "https://mainnet-api.kaiascan.io/hardhat-verify",
+          browserURL: "https://kaiascan.io",
         },
       },
     ],

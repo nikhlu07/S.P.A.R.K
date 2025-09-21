@@ -20,7 +20,7 @@
 
 ## 🌐 SYSTEM OVERVIEW
 
-SPARK represents the next evolution in decentralized commerce - a quantum leap beyond traditional payment systems. Built on the advanced Kaia blockchain architecture and deeply integrated with LINE's 200+ million user ecosystem, SPARK creates self-sustaining economic networks that operate at the intersection of social trust and financial technology.
+SPARK is a social commerce platform that combines payments, rewards, and community features on the Kaia blockchain. It helps local businesses connect with customers through social interactions and blockchain technology.
 
 ### 🔮 CORE MATRIX
 

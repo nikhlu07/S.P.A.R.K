@@ -1,17 +1,16 @@
-
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { X } from 'lucide-react';
+} from '@/components/ui/dialog';
 
 interface LoanApplicationDialogProps {
   isOpen: boolean;
@@ -19,61 +18,108 @@ interface LoanApplicationDialogProps {
   onSubmit: (data: { amount: string; purpose: string; repaymentPercentage: string }) => void;
 }
 
-export const LoanApplicationDialog = ({ isOpen, onClose, onSubmit }: LoanApplicationDialogProps) => {
-  const [amount, setAmount] = useState('');
-  const [purpose, setPurpose] = useState('');
-  const [repaymentPercentage, setRepaymentPercentage] = useState('');
+function LoanApplicationDialog({ isOpen, onClose, onSubmit }: LoanApplicationDialogProps) {
+  const [formData, setFormData] = useState({
+    amount: '',
+    purpose: '',
+    repaymentPercentage: '5'
+  });
 
-  const handleSubmit = () => {
-    onSubmit({ amount, purpose, repaymentPercentage });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+    setFormData({ amount: '', purpose: '', repaymentPercentage: '5' });
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-900 text-gray-200 border-purple-500/30 max-w-2xl p-0">
-        <DialogHeader className="p-6 pb-4">
-          <DialogTitle className="text-3xl font-bold text-white text-glow mb-2">Apply for a New Loan</DialogTitle>
-          <DialogDescription className="text-lg text-purple-400 font-semibold">Fill out the form below to submit your loan application.</DialogDescription>
+      <DialogContent className="bg-black/80 backdrop-blur-md border border-purple-500/50 text-white">
+        <DialogHeader>
+          <DialogTitle className="font-tech text-2xl text-glow">Apply for Business Loan</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Get funding from the Quantum Lending Pool for your business growth.
+          </DialogDescription>
         </DialogHeader>
         
-        <div className="px-6 pb-6">
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="loan-amount" className="text-right">
-                Amount (USDT)
-              </Label>
-              <Input id="loan-amount" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="col-span-3 bg-black/20 border-purple-500/20" placeholder="e.g., 5000"/>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="loan-purpose" className="text-right">
-                Purpose
-              </Label>
-              <Input id="loan-purpose" value={purpose} onChange={(e) => setPurpose(e.target.value)} className="col-span-3 bg-black/20 border-purple-500/20" placeholder="e.g., For business expansion"/>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="repayment-percentage" className="text-right">
-                Daily Repayment
-              </Label>
-              <Input id="repayment-percentage" type="number" value={repaymentPercentage} onChange={(e) => setRepaymentPercentage(e.target.value)} className="col-span-3 bg-black/20 border-purple-500/20" placeholder="e.g., 5 for 5%"/>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4 mt-2">
-                <div className="col-start-2 col-span-3">
-                    <p className="text-xs text-gray-400">
-                        This is the percentage of your daily revenue that will be automatically repaid towards your loan.
-                    </p>
-                </div>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="amount" className="text-gray-400">Loan Amount (USDT)</Label>
+            <Input
+              id="amount"
+              type="number"
+              placeholder="Enter amount needed"
+              value={formData.amount}
+              onChange={(e) => handleInputChange('amount', e.target.value)}
+              className="bg-black/50 border-gray-700 text-white"
+              required
+            />
           </div>
-        </div>
 
-        <DialogFooter className="p-6 bg-black/20 mt-6 flex flex-row gap-4">
-            <Button className="glow-button font-semibold text-white px-8 py-3 rounded-lg w-full" onClick={handleSubmit}>Submit Application</Button>
-        </DialogFooter>
-        <button onClick={onClose} className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity data-[state=open]:bg-accent data-[state=open]:text-muted-foreground hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
-        </button>
+          <div className="space-y-2">
+            <Label htmlFor="purpose" className="text-gray-400">Business Purpose</Label>
+            <Textarea
+              id="purpose"
+              placeholder="Describe how you'll use the funds..."
+              value={formData.purpose}
+              onChange={(e) => handleInputChange('purpose', e.target.value)}
+              className="bg-black/50 border-gray-700 text-white"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="repayment" className="text-gray-400">Daily Repayment Percentage</Label>
+            <Input
+              id="repayment"
+              type="number"
+              step="0.1"
+              min="1"
+              max="10"
+              placeholder="5"
+              value={formData.repaymentPercentage}
+              onChange={(e) => handleInputChange('repaymentPercentage', e.target.value)}
+              className="bg-black/50 border-gray-700 text-white"
+              required
+            />
+            <p className="text-xs text-gray-500">
+              Recommended: 3-7% daily repayment based on your business cash flow
+            </p>
+          </div>
+
+          <div className="bg-blue-900/20 border border-blue-500/50 rounded-lg p-3">
+            <h4 className="text-blue-400 font-medium mb-2">Loan Terms</h4>
+            <ul className="text-blue-300 text-sm space-y-1">
+              <li>• AI-powered credit assessment</li>
+              <li>• Flexible repayment schedule</li>
+              <li>• Community-funded pool</li>
+              <li>• No traditional credit check required</li>
+            </ul>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={onClose}
+              variant="outline"
+              className="text-gray-300 border-gray-600 hover:bg-gray-700/50 hover:text-white"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Submit Application
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
-};
+}
+
+export { LoanApplicationDialog };

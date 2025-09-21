@@ -71,7 +71,7 @@ const LocalMarketplace = () => {
         
         return {
           ...business,
-          image: `https://images.unsplash.com/photo-${1500000000000 + Math.random() * 1000000000}?w=400&h=300&fit=crop`,
+          image: business.image || "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400",
           rating: 4.0 + Math.random() * 1.0, // Random rating between 4.0-5.0
           friendsLove: Math.floor(Math.random() * 50) + 10, // Random friends count
           activeDeals,
@@ -92,7 +92,7 @@ const LocalMarketplace = () => {
           isVerified: true,
           trustScore: 85,
           totalVolume: 1250,
-          image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400',
+          image: 'https://images.unsplash.com/photo-1511920183353-3c9c95275a53?w=400',
           rating: 4.8,
           friendsLove: 15,
           activeDeals: 3,
@@ -107,7 +107,7 @@ const LocalMarketplace = () => {
           isVerified: true,
           trustScore: 92,
           totalVolume: 3200,
-          image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400',
+          image: 'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=400',
           rating: 4.6,
           friendsLove: 28,
           activeDeals: 5,
@@ -122,7 +122,7 @@ const LocalMarketplace = () => {
           isVerified: false,
           trustScore: 78,
           totalVolume: 890,
-          image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400',
+          image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=400',
           rating: 4.4,
           friendsLove: 12,
           activeDeals: 2,
@@ -245,7 +245,7 @@ const LocalMarketplace = () => {
         {/* Business Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {sortedBusinesses.map((business) => (
-            <Card key={business.businessAddress} className="overflow-hidden flex flex-col bg-gray-900/50 card-border-glow animation-none">
+            <Card key={business.businessAddress} className="overflow-hidden flex flex-col bg-gray-900/50 hover:bg-gray-800/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 border border-gray-700/50">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
@@ -269,11 +269,18 @@ const LocalMarketplace = () => {
               </CardHeader>
               
               <CardContent className="flex-grow">
-                <img 
-                  src={business.image} 
-                  alt={business.name}
-                  className="rounded-lg mb-4 w-full h-48 object-cover"
-                />
+                <div className="relative overflow-hidden rounded-lg mb-4">
+                  <img 
+                    src={business.image || "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop"} 
+                    alt={business.name}
+                    className="w-full h-48 object-cover object-center transition-transform duration-300 hover:scale-105"
+                    style={{ maxWidth: '100%', maxHeight: '100%' }}
+                    onError={(e) => {
+                      e.currentTarget.src = "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop";
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                </div>
                 
                 {/* Business Stats */}
                 <div className="space-y-3">
