@@ -287,5 +287,3 @@ const LineDemoPage: React.FC = () => {
     </LineProvider>
   );
 };
-
-export default LineDemoPage;
