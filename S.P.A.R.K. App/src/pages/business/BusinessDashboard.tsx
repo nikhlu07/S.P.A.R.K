@@ -98,21 +98,21 @@ const BusinessDashboard = () => {
     const { createDeal } = useBusiness();
     const { addTransaction } = useBlockchain();
 
+    const [businessUser, setBusinessUser] = useState<any | null>(null);
+    const [authStatus, setAuthStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
     const [isVerified, setIsVerified] = useState(false);
 
     // Authentication guard - check if user is logged in
     useEffect(() => {
-        // Wait until web3 is no longer loading
         if (isWeb3Loading) {
+            setAuthStatus('loading');
             return;
         }
 
-        let businessUser = localStorage.getItem("businessUser");
-        
-        // If no business user in localStorage, check if wallet is connected and create fallback session
-        if (!businessUser) {
-            if (account) {
-                // Wallet is connected but no business session - create fallback session
+        if (account) {
+            let userJson = localStorage.getItem("businessUser");
+
+            if (!userJson) {
                 const fallbackBusiness = {
                     id: `fallback_${account}`,
                     name: `Business (${account.slice(0, 6)}...)`,
@@ -124,29 +124,34 @@ const BusinessDashboard = () => {
                     totalVolume: 5000
                 };
                 
-                localStorage.setItem("businessUser", JSON.stringify(fallbackBusiness));
+                userJson = JSON.stringify(fallbackBusiness);
+                localStorage.setItem("businessUser", userJson);
                 console.log("✅ Created fallback business session for wallet:", account);
-                
-                // Update the businessUser variable with the newly created session
-                businessUser = JSON.stringify(fallbackBusiness);
-            } else {
-                navigate('/business/login');
-                return;
             }
-        }
-        
-        // Parse and validate business user data
-        try {
-            const userData = JSON.parse(businessUser!);
-            if (!userData.walletAddress) {
+
+            try {
+                const userData = JSON.parse(userJson!);
+                if (userData.walletAddress) {
+                    setBusinessUser(userData);
+                    setAuthStatus('authenticated');
+                } else {
+                    localStorage.removeItem("businessUser");
+                    setAuthStatus('unauthenticated');
+                }
+            } catch (error) {
                 localStorage.removeItem("businessUser");
-                navigate('/business/login');
+                setAuthStatus('unauthenticated');
             }
-        } catch (error) {
-            localStorage.removeItem("businessUser");
+        } else {
+            setAuthStatus('unauthenticated');
+        }
+    }, [account, isWeb3Loading]);
+
+    useEffect(() => {
+        if (authStatus === 'unauthenticated') {
             navigate('/business/login');
         }
-    }, [navigate, account, isWeb3Loading]);
+    }, [authStatus, navigate]);
 
     // Get the first business or use default (moved up before useEffect)
     const currentBusiness = businesses.length > 0 ? businesses[0] : null;
@@ -158,123 +163,24 @@ const BusinessDashboard = () => {
             const blockchainVerified = currentBusiness?.isVerified || false;
             setIsVerified(localVerified || blockchainVerified);
         }
-    }, [account, currentBusiness]);
+    }, [account, currentBusiness?.isVerified]);
 
-    // Listen for verification changes
-    useEffect(() => {
-        const handleVerificationChange = (event: CustomEvent) => {
-            if (event.detail.walletAddress === account) {
-                setIsVerified(event.detail.verified);
-            }
-        };
+    if (!businessUser) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
+                <div className="text-center">
+                    <svg className="animate-spin h-16 w-16 text-blue-400 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <h2 className="text-2xl font-semibold tracking-tight">Loading Dashboard...</h2>
+                    <p className="text-gray-400">Please wait while we connect to your wallet and load your business data.</p>
+                </div>
+            </div>
+        );
+    }
 
-        window.addEventListener('businessVerificationChanged', handleVerificationChange as EventListener);
-
-        return () => {
-            window.removeEventListener('businessVerificationChanged', handleVerificationChange as EventListener);
-        };
-    }, [account]);
-    const [isLoanApplicationOpen, setIsLoanApplicationOpen] = useState(false);
-    const [isCouponDialogOpen, setIsCouponDialogOpen] = useState(false);
-    const [isNFTDialogOpen, setIsNFTDialogOpen] = useState(false);
-    const [isListingDialogOpen, setIsListingDialogOpen] = useState(false);
-    const [isQRCodeDialogOpen, setIsQRCodeDialogOpen] = useState(false);
-    const mouseGlowRef = useRef<HTMLDivElement>(null);
-    const sectionsRef = useRef<(HTMLElement | null)[]>([]);
-
-    // State for form inputs
-    const [couponData, setCouponData] = useState({ title: '', description: '', code: '', discount: '', discountType: 'percentage' as 'percentage' | 'fixed', expiry: '', terms: '' });
-    const [nftData, setNftData] = useState({ name: '', description: '', price: '', image: '', metadata: '' });
-    const [listingData, setListingData] = useState({ title: '', description: '', price: '', category: '', image: '' });
-    const [qrCodeData, setQrCodeData] = useState({ amount: '', currency: 'USDT', description: '' });
-
-    // State for table data
-    const [loans, setLoans] = useState<Loan[]>([]);
-
-    const [coupons, setCoupons] = useState<Coupon[]>([
-        { title: 'Summer Sale', description: 'Get 25% off on all handmade goods.', code: 'SUMMER25', discount: '25%', discountType: 'percentage', status: 'Active', expiry: '2024-08-31', terms: 'This offer cannot be combined with other promotions.' },
-    ]);
-    const [listings, setListings] = useState<Listing[]>([]);
-    const [nfts, setNfts] = useState<any[]>([]);
-    const [qrCodes, setQrCodes] = useState<any[]>([]);
-
-    // Generate random trust score between 70-95 for demo
-    const randomTrustScore = Math.floor(Math.random() * 26) + 70;
-
-    // Real blockchain data for user and business
-    const userData = {
-        name: 'Nikhil',
-        email: 'nikhil@elykid.com',
-        sparkId: `SPK-USER-${account?.slice(-8) || 'N1K2H3'}`,
-        walletAddress: account || 'Not Connected',
-        balance: balance || '0',
-        usdtBalance: usdtBalance || '0'
-    };
-
-    const businessData = {
-        name: currentBusiness?.name || 'Elykid Private Limited',
-        type: currentBusiness?.category || 'Technology',
-        address: currentBusiness?.businessAddress || 'Not Registered',
-        trustScore: currentBusiness?.trustScore || randomTrustScore,
-        totalVolume: currentBusiness?.totalVolume || 0,
-        isVerified: isVerified || currentBusiness?.isVerified || false,
-        location: currentBusiness?.location || 'Lucknow, India',
-        get verificationStatus() {
-            return this.isVerified ? 'Verified' : 'Not Verified';
-        }
-    };
-
-    const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { id, value } = e.target;
-        if (id in couponData) {
-            setCouponData({ ...couponData, [id]: value });
-        } else if (id in nftData) {
-            setNftData({ ...nftData, [id]: value });
-        } else if (id in listingData) {
-            setListingData({ ...listingData, [id]: value });
-        } else if (id in qrCodeData) {
-            setQrCodeData({ ...qrCodeData, [id]: value });
-        }
-    };
-
-    const handleSelectChange = (value: 'percentage' | 'fixed') => {
-        setCouponData({ ...couponData, discountType: value });
-    };
-
-    useEffect(() => {
-        const loadLoans = async () => {
-            if (account) {
-                await fetchLoans();
-            }
-        };
-        loadLoans();
-    }, [account]);
-
-    const fetchLoans = async () => {
-        if (!account) return;
-        
-        try {
-            const loanIds = await web3Service.getBorrowerLoans(account);
-            const loansData = await Promise.all(
-                loanIds.map(async (id) => {
-                    const details = await web3Service.getLoanDetails(id);
-                    return {
-                        id: id.toString(),
-                        amount: (Number(details.amount) / 1e6).toString(), // Convert from USDT base units (6 decimals)
-                        status: ['Pending', 'Active', 'Repaid', 'Defaulted'][Number(details.status)],
-                        date: new Date(Number(details.startTime) * 1000).toISOString().split('T')[0],
-                        repaymentPercentage: details.interestRate.toString() + '%',
-                        purpose: details.purpose
-                    };
-                })
-            );
-            setLoans(loansData);
-        } catch (error) {
-            console.error('Failed to fetch loans:', error);
-        }
-    };
-
-    const handleLoanSubmit = async (data: { amount: number; purpose: string; dailyRepaymentPercentage: number }) => {
+    const handleCreateDeal = async (dealData: any) => {
         try {
             await web3Service.applyForLoan(data);
             
