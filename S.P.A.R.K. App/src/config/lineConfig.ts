@@ -1,12 +1,13 @@
 // LINE Mini Dapp Configuration
 export const LINE_CONFIG = {
-  dappId: 'N68c79c9b36f5a3565ea5cfd4',
+  // Use Vite env vars for frontend-safe values
+  dappId: import.meta.env.VITE_LINE_LIFF_ID || 'N68c79c9b36f5a3565ea5cfd4', // LIFF ID
   dappName: 'S.P.A.R.K.',
-  clientId: '50dea5c1-8537-4278-ad37-7b5112280aea',
-  clientSecret: 'e4161bc9-0e0f-4782-91db-78f9e9d7ffb3',
+  clientId: import.meta.env.VITE_LINE_CLIENT_ID || '50dea5c1-8537-4278-ad37-7b5112280aea',
+  // IMPORTANT: Do NOT expose client secrets in frontend code. Keep secrets on server only.
   redirectUri: window.location.origin,
   scope: 'profile openid',
-  botId: '', // Add your LINE bot ID if you have one
+  botId: import.meta.env.VITE_LINE_BOT_ID || '', // LINE bot ID (optional)
 };
 
 // LINE Mini Dapp API endpoints
@@ -19,9 +20,13 @@ export const LINE_API = {
 
 // Check if running in LINE Mini Dapp environment
 export const isLineMiniApp = () => {
-  return window.navigator.userAgent.includes('Line') || 
-         window.location.href.includes('line://') ||
-         window.parent !== window;
+  return (
+    typeof window !== 'undefined' &&
+    (navigator.userAgent.includes('Line') ||
+      window.location.href.includes('line://') ||
+      // When running inside LIFF in an in-app webview, window.parent may differ
+      window.parent !== window)
+  );
 };
 
 // Get LINE user info from URL parameters or localStorage
@@ -32,10 +37,10 @@ export const getLineUserInfo = () => {
   const linePictureUrl = urlParams.get('pictureUrl') || localStorage.getItem('linePictureUrl');
   
   return {
-    userId: lineUserId,
-    displayName: lineDisplayName,
-    pictureUrl: linePictureUrl,
-  };
+    userId: lineUserId || undefined,
+    displayName: lineDisplayName || undefined,
+    pictureUrl: linePictureUrl || undefined,
+  } as { userId?: string; displayName?: string; pictureUrl?: string };
 };
 
 // Save LINE user info to localStorage

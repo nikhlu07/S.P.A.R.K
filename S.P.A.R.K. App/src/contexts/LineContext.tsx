@@ -7,6 +7,8 @@ interface LineContextType {
   isInitialized: boolean;
   shareDeal: (deal: any) => Promise<boolean>;
   shareBusiness: (business: any) => Promise<boolean>;
+  sharePaymentSuccess: (tx: any) => Promise<boolean>;
+  inviteFriends: () => Promise<boolean>;
   logout: () => void;
   environmentInfo: any;
 }
@@ -37,11 +39,9 @@ export const LineProvider: React.FC<LineProviderProps> = ({ children }) => {
         const initialized = await lineService.initialize();
         setIsLineMiniApp(initialized);
         
-        if (initialized) {
-          const user = await lineService.getUserProfile();
-          setLineUser(user);
-          setEnvironmentInfo(lineService.getEnvironmentInfo());
-        }
+        const user = await lineService.getUserProfile();
+        setLineUser(user);
+        setEnvironmentInfo(lineService.getEnvironmentInfo());
         
         setIsInitialized(true);
       } catch (error) {
@@ -71,6 +71,24 @@ export const LineProvider: React.FC<LineProviderProps> = ({ children }) => {
     }
   };
 
+  const sharePaymentSuccess = async (tx: any): Promise<boolean> => {
+    try {
+      return await lineService.sharePaymentSuccess(tx);
+    } catch (error) {
+      console.error('Failed to share payment success:', error);
+      return false;
+    }
+  };
+
+  const inviteFriends = async (): Promise<boolean> => {
+    try {
+      return await lineService.inviteFriends();
+    } catch (error) {
+      console.error('Failed to invite friends:', error);
+      return false;
+    }
+  };
+
   const logout = () => {
     lineService.logout();
     setLineUser(null);
@@ -82,6 +100,8 @@ export const LineProvider: React.FC<LineProviderProps> = ({ children }) => {
     isInitialized,
     shareDeal,
     shareBusiness,
+    sharePaymentSuccess,
+    inviteFriends,
     logout,
     environmentInfo,
   };

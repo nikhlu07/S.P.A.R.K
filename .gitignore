@@ -51,3 +51,4 @@ analytics/
 # Temporary files
 tmp/
 temp/
+.vercel

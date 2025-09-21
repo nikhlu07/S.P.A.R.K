@@ -101,6 +101,103 @@ const BusinessDashboard = () => {
     const [businessUser, setBusinessUser] = useState<any | null>(null);
     const [authStatus, setAuthStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
     const [isVerified, setIsVerified] = useState(false);
+    const [userData, setUserData] = useState<any | null>(null);
+    
+    // Dialog states
+    const [isCouponDialogOpen, setIsCouponDialogOpen] = useState(false);
+    const [isNFTDialogOpen, setIsNFTDialogOpen] = useState(false);
+    const [isListingDialogOpen, setIsListingDialogOpen] = useState(false);
+    const [isQRCodeDialogOpen, setIsQRCodeDialogOpen] = useState(false);
+    const [isLoanApplicationOpen, setIsLoanApplicationOpen] = useState(false);
+    
+    // Form data states
+    const [couponData, setCouponData] = useState({
+        title: '',
+        description: '',
+        code: '',
+        discount: '',
+        discountType: 'percentage' as 'percentage' | 'fixed',
+        expiry: '',
+        terms: ''
+    });
+    
+    const [nftData, setNftData] = useState({
+        name: '',
+        description: '',
+        price: '',
+        image: '',
+        metadata: ''
+    });
+    
+    const [listingData, setListingData] = useState({
+        title: '',
+        description: '',
+        price: '',
+        category: '',
+        image: ''
+    });
+    
+    const [qrCodeData, setQrCodeData] = useState({
+        amount: '',
+        currency: 'USDT',
+        description: ''
+    });
+    
+    // Data arrays
+    const [coupons, setCoupons] = useState<Coupon[]>([]);
+    const [nfts, setNfts] = useState<any[]>([]);
+    const [listings, setListings] = useState<Listing[]>([]);
+    const [qrCodes, setQrCodes] = useState<any[]>([]);
+    const [loans, setLoans] = useState<Loan[]>([]);
+    
+    // Business data
+    const [businessData, setBusinessData] = useState({
+        name: 'Your Business',
+        type: 'Retail',
+        location: 'Local',
+        isVerified: false,
+        verificationStatus: 'pending',
+        trustScore: 85
+    });
+
+    // Refs
+    const sectionsRef = useRef<(HTMLElement | null)[]>([]);
+    const mouseGlowRef = useRef<HTMLDivElement>(null);
+
+    // Input change handler
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { id, value } = e.target;
+        
+        // Determine which form data object to update based on the input id
+        if (id in couponData) {
+            setCouponData(prev => ({ ...prev, [id]: value }));
+        } else if (id in nftData) {
+            setNftData(prev => ({ ...prev, [id]: value }));
+        } else if (id in listingData) {
+            setListingData(prev => ({ ...prev, [id]: value }));
+        } else if (id in qrCodeData) {
+            setQrCodeData(prev => ({ ...prev, [id]: value }));
+        }
+    };
+
+    // Select change handler for coupon discount type
+    const handleSelectChange = (value: string) => {
+        setCouponData(prev => ({ ...prev, discountType: value as 'percentage' | 'fixed' }));
+    };
+
+    // Loan application submit handler
+    const handleLoanSubmit = (data: any) => {
+        console.log('Loan application submitted:', data);
+        // Add loan application logic here
+        setLoans(prev => [...prev, {
+            id: `loan-${Date.now()}`,
+            amount: data.amount,
+            repaymentPercentage: data.repaymentPercentage,
+            status: 'Pending',
+            date: new Date().toLocaleDateString()
+        }]);
+        setIsLoanApplicationOpen(false);
+    };
 
     // Authentication guard - check if user is logged in
     useEffect(() => {
@@ -130,9 +227,10 @@ const BusinessDashboard = () => {
             }
 
             try {
-                const userData = JSON.parse(userJson!);
-                if (userData.walletAddress) {
-                    setBusinessUser(userData);
+                const parsedUserData = JSON.parse(userJson!);
+                if (parsedUserData.walletAddress) {
+                    setUserData(parsedUserData);
+                    setBusinessUser(parsedUserData);
                     setAuthStatus('authenticated');
                 } else {
                     localStorage.removeItem("businessUser");
@@ -182,15 +280,15 @@ const BusinessDashboard = () => {
 
     const handleCreateDeal = async (dealData: any) => {
         try {
-            await web3Service.applyForLoan(data);
+            await web3Service.applyForLoan(dealData);
             
             // Refresh loans from blockchain
-            await fetchLoans();
+            // await fetchLoans(); // TODO: Implement fetchLoans function
             
             setIsLoanApplicationOpen(false);
         } catch (error) {
             console.error('Failed to submit loan application:', error);
-            // TODO: Show error message
+            alert('Failed to submit loan application. Please try again.');
         }
     };
 
@@ -199,11 +297,15 @@ const BusinessDashboard = () => {
 
         // Prepare display coupon
         const newCoupon: Coupon = {
-            ...couponData,
-            code: couponData.code.toUpperCase(),
+            title: couponData.title,
+            description: couponData.description,
+            discountType: couponData.discountType,
             discount: couponData.discountType === 'percentage'
                 ? `${couponData.discount}%`
                 : `$${Number(couponData.discount).toLocaleString()}`,
+            expiry: new Date().toISOString(), // Default to current date if couponData not defined
+            terms: couponData.terms,
+            code: couponData.code.toUpperCase(),
             status: 'Active',
         };
 
@@ -290,13 +392,9 @@ const BusinessDashboard = () => {
         // Create listing
         const newListing: Listing = {
             companyName: businessData.name,
-            totalStocks: Number(listingData.title), // Convert title to number for totalStocks
+            totalStocks: Number(listingData.price) || 0, // Use price as totalStocks
             listedDate: new Date().toISOString().split('T')[0],
-            status: 'Active',
-// Remove category property since it's not defined in Listing interface
-// Remove image property since it's not defined in Listing interface
-            // status: 'Active',
-// Remove createdAt since it's not in Listing interface
+            status: 'Active'
         };
         
         setListings([...listings, newListing]);
@@ -427,7 +525,7 @@ const BusinessDashboard = () => {
                             <Button variant="outline" size="icon" className="text-white border-purple-500 hover:bg-purple-500/20 hover:text-white">
                                 <Bell className="h-4 w-4" />
                             </Button>
-                            <Button variant="outline" className="text-white border-purple-500 hover:bg-purple-500/20 hover:text-white">Logout</Button>
+                            <Button onClick={handleLogout} variant="outline" className="text-white border-purple-500 hover:bg-purple-500/20 hover:text-white">Logout</Button>
                         </div>
                     </div>
                 </div>
@@ -509,7 +607,7 @@ const BusinessDashboard = () => {
                                     <li><strong>Type:</strong> {businessData.type}</li>
                                     <li><strong>Location:</strong> {businessData.location}</li>
                                     <li><strong>Trust Score:</strong> {businessData.trustScore}/100</li>
-                                    <li><strong>Total Volume:</strong> {businessData.totalVolume} USDT</li>
+rob
                                     <li><strong>Verification Status:</strong>
                                         <span className={businessData.isVerified ? 'text-green-400' : 'text-yellow-400'}>
                                             {businessData.verificationStatus}
@@ -706,7 +804,7 @@ const BusinessDashboard = () => {
                 </div>
             </section>
 
-            <section id="nfts" ref={el => sectionsRef.current[1] = el} className="py-16 md:py-20">
+            <section id="qr-codes" ref={el => sectionsRef.current[3] = el} className="py-16 md:py-20">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <h2 className="font-tech text-3xl md:text-4xl font-bold text-white text-glow">Payment QR Codes</h2>
@@ -751,10 +849,9 @@ const BusinessDashboard = () => {
                             <Table>
                                 <TableHeader>
                                     <TableRow className="border-gray-800 hover:bg-transparent">
-                                        <TableHead className="text-gray-400">Title</TableHead>
-                                        <TableHead className="text-gray-400">Description</TableHead>
-                                        <TableHead className="text-gray-400">Price</TableHead>
-                                        <TableHead className="text-gray-400">Category</TableHead>
+                                        <TableHead className="text-gray-400">Company Name</TableHead>
+                                        <TableHead className="text-gray-400">Total Stocks</TableHead>
+                                        <TableHead className="text-gray-400">Listed Date</TableHead>
                                         <TableHead className="text-gray-400">Status</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -762,10 +859,8 @@ const BusinessDashboard = () => {
                                     {listings.map((listing) => (
                                         <TableRow key={listing.companyName} className="border-gray-800 hover:bg-purple-500/5">
                                             <TableCell className="text-white">{listing.companyName}</TableCell>
-                                            <TableCell className="text-white">{listing.companyName}</TableCell>
                                             <TableCell className="text-white">{listing.totalStocks}</TableCell>
-                                            <TableCell className="text-white">{listing.companyName}</TableCell>
-
+                                            <TableCell className="text-white">{listing.listedDate}</TableCell>
                                             <TableCell className="text-green-400">{listing.status}</TableCell>
                                         </TableRow>
                                     ))}
@@ -785,11 +880,8 @@ const BusinessDashboard = () => {
                 </div>
             </section>
 
-            {/* Add the missing dialogs */}
 
-
-            {/* Add missing import for Image icon */}
-            <Dialog open={isNFTDialogOpen} onOpenChange={setIsNFTDialogOpen}>
+            <Dialog open={isNFTDialogOpen} onOpenChange={(open: boolean) => setIsNFTDialogOpen(open)}>
                 <DialogContent className="bg-black/80 backdrop-blur-md border border-purple-500/50 text-white">
                     <DialogHeader>
                         <DialogTitle className="font-tech text-2xl text-glow">Create New NFT</DialogTitle>
