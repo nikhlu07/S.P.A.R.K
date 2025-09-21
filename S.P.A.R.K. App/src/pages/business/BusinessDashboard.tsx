@@ -91,7 +91,8 @@ const BusinessDashboard = () => {
         poolInfo,
         recordSocialInteraction,
         calculateTrustScore,
-        createCampaign
+        createCampaign,
+        isLoading: isWeb3Loading // Destructure and rename isLoading
     } = useWeb3();
 
     const { createDeal } = useBusiness();
@@ -101,7 +102,12 @@ const BusinessDashboard = () => {
 
     // Authentication guard - check if user is logged in
     useEffect(() => {
-        const businessUser = localStorage.getItem("businessUser");
+        // Wait until web3 is no longer loading
+        if (isWeb3Loading) {
+            return;
+        }
+
+        let businessUser = localStorage.getItem("businessUser");
         
         // If no business user in localStorage, check if wallet is connected and create fallback session
         if (!businessUser) {
@@ -120,6 +126,9 @@ const BusinessDashboard = () => {
                 
                 localStorage.setItem("businessUser", JSON.stringify(fallbackBusiness));
                 console.log("✅ Created fallback business session for wallet:", account);
+                
+                // Update the businessUser variable with the newly created session
+                businessUser = JSON.stringify(fallbackBusiness);
             } else {
                 navigate('/business/login');
                 return;
@@ -137,7 +146,7 @@ const BusinessDashboard = () => {
             localStorage.removeItem("businessUser");
             navigate('/business/login');
         }
-    }, [navigate, account]);
+    }, [navigate, account, isWeb3Loading]);
 
     // Get the first business or use default (moved up before useEffect)
     const currentBusiness = businesses.length > 0 ? businesses[0] : null;
