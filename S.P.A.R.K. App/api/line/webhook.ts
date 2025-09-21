@@ -34,6 +34,11 @@ class SimpleLineWebhookService {
   // Send text message to LINE user
   async sendTextMessage(userId: string, text: string): Promise<boolean> {
     try {
+      if (!this.channelAccessToken) {
+        console.log('No LINE_CHANNEL_ACCESS_TOKEN found, skipping message send');
+        return false;
+      }
+
       const response = await fetch(`${this.baseURL}/message/push`, {
         method: 'POST',
         headers: {
@@ -60,16 +65,23 @@ class SimpleLineWebhookService {
 const service = new SimpleLineWebhookService();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Basic health check (useful for verifying deployment)
-  if (req.method === 'GET') {
-    return res.status(200).send('LINE webhook is running');
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
   try {
+    // Basic health check (useful for verifying deployment)
+    if (req.method === 'GET') {
+      return res.status(200).json({ 
+        status: 'LINE webhook is running',
+        timestamp: new Date().toISOString(),
+        environment: {
+          hasAccessToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN,
+          hasChannelSecret: !!process.env.LINE_CHANNEL_SECRET
+        }
+      });
+    }
+
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method Not Allowed' });
+    }
+
     console.log('Webhook received:', {
       method: req.method,
       headers: req.headers,
@@ -79,12 +91,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const signature = (req.headers['x-line-signature'] as string) || '';
     const channelSecret = process.env.LINE_CHANNEL_SECRET || '';
 
-    // NOTE: Our verifySignature currently returns true (demo), but we keep the call for future hardening
-    const bodyObj: any = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    // Handle both string and object body formats
+    let bodyObj: any;
+    try {
+      bodyObj = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return res.status(400).json({ error: 'Invalid JSON body' });
+    }
 
+    // NOTE: Our verifySignature currently returns true (demo), but we keep the call for future hardening
     const verified = service.verifySignature(signature, JSON.stringify(bodyObj || {}), channelSecret);
     if (!verified) {
-      return res.status(401).json({ ok: false, error: 'Invalid signature' });
+      return res.status(401).json({ error: 'Invalid signature' });
     }
 
     // Process events from the request body
@@ -95,12 +114,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await service.handleWebhookEvent(event);
     }
 
-    return res.status(200).json({ message: 'OK' });
+    return res.status(200).json({ message: 'OK', processed: events.length });
   } catch (error) {
     console.error('Webhook error:', error);
     return res.status(500).json({ 
       error: 'Internal server error',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     });
   }
 }
