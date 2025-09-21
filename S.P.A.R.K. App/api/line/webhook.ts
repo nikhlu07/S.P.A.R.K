@@ -1,5 +1,6 @@
 // Force Node.js runtime explicitly to avoid Edge runtime mismatches
-export const config = { runtime: 'nodejs18.x', memory: 1024 };
+export const config = { memory: 1024 };
+
 
 // Vercel-style serverless function for LINE Messaging API webhook
 // Handles webhook events with a self-contained service implementation
