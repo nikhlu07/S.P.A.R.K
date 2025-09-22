@@ -292,11 +292,9 @@ This project is released under the **Adaptive Open Source License 3.0** - promot
 
 ## 🔗 NEURAL LINKS
 
-- **🌐 Website**: [spark-protocol.io](https://spark-protocol.io)
-- **📚 Documentation**: [docs.spark-protocol.io](https://docs.spark-protocol.io)
-- **🐦 Social**: [@SparkProtocol](https://twitter.com/sparkprotocol)
-- **💬 Community**: [Discord](https://discord.gg/sparkprotocol)
-- **📊 Analytics**: [dashboard.spark-protocol.io](https://dashboard.spark-protocol.io)
+- **🌐 Website**: [spark-protocol.io](https://sparky-one.vercel.app/)
+- **🐦 Social**: [@SparkProtocol](https://twitter.com/THE_OS_1)
+- **📊 Analytics**: [dashboard.spark-protocol.io](https://dune.com/nikhill_07/kaia)
 
 ---
 
